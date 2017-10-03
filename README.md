@@ -18,9 +18,11 @@ First of all you need to declare a DbAgent variable:
 `DbAgent agent = new DbAgent(<name>, <connection string>);`
 
 Then get the all stored procedures existing in that DataBase:
+
 `ProcedureFactory fact = SqlManager.GetProceduresFactory(agent);`
 
-Load Procedure:
+Select the  Procedure:
+
 `DataSItem procedure = fact.Procedures["procedurename"];`
 
 Set values to parameters:
