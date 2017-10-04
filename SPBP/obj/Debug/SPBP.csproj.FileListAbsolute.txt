@@ -1,0 +1,5 @@
+D:\C#\Sources\Tuition\Test\SPBP\bin\Debug\SPBP.dll
+D:\C#\Sources\Tuition\Test\SPBP\bin\Debug\SPBP.pdb
+D:\C#\Sources\Tuition\Test\SPBP\obj\Debug\SPBP.dll
+D:\C#\Sources\Tuition\Test\SPBP\obj\Debug\SPBP.pdb
+D:\C#\Sources\Tuition\Test\SPBP\obj\Debug\SPBP.csprojResolveAssemblyReference.cache
