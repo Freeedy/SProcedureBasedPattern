@@ -94,7 +94,7 @@ Examples of  Procedures (has return value , output params , without rows , etc )
 
 #### Execution Sample 
 
-***First Step ***
+***First Step***
 ```
 DbAgent agent = new DbAgent("Employees", datasource, true); //create db agent 
 ProcedureFactory fact = SqlManager.GetProceduresFactory(agent);  
@@ -102,7 +102,7 @@ fact .AddReturnValueToEachProcedure();
 /*add return parametr to all procedure (by default the procedures doesn't have  return parameter )*/
 
 ```
-***Execute AddEmployee ***
+***Execute AddEmployee***
 ``` 
  DataSItem item = fact.Procedures[proc]; //select target procedure (AddEmployee)
  //fill input params  values 
@@ -131,7 +131,7 @@ When  the  procedure  was executed  the **ExecResult** get the return parameter 
 **Execute procedure in Picture  3**
 Procedure  selection section is the same .
 
-**Execution **
+**Execution**
 
 ```
 DataSet set ;
