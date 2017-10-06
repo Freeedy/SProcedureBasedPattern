@@ -5,14 +5,13 @@ using System.Data;
 using System.Text;
 using System.IO;
 using System.Xml;
+using SPBP.Connector;
 using SPBP.Connector.Abstract;
 using SPBP.Connector.Class;
 using SPBP.Handling;
-using SPBP.Connector.Attributes;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace SPBP.Connector.Manager
+namespace SPBP
 {
     public static class DBCommander
     {
@@ -217,36 +216,7 @@ namespace SPBP.Connector.Manager
                 throw new Exception("Agent is  null  or state  is false  ");
             }
         }
-
-
-
-        #region Extensions
-
-        public static ExecResult ExecDataReadByInheritance<T>(this DataSItem item, DbAgent agent, out IBag<T> container)
-            where T : DbObject
-        {
-            return ExecProcDataReadByInheritance(agent, item, out container);
-        }
-
-        public static ExecResult ExecuteDataReaderByRef<T>(this DataSItem item, DbAgent agent, out IBag<T> container)
-        {
-            return ExecuteProcedureDataReaderByRef(agent, item, out container);
-        }
-
-        public static ExecResult ExecuteNonQuery(this DataSItem itm, DbAgent agent, string constr = null)
-        {
-            return ExecuteNonQueryProcedure(agent, itm);
-
-        }
-
-        public static ExecResult ExecDataSet(this DataSItem item, DbAgent agent, out DataSet set)
-        {
-            return ExecuteProcedureDataSet(agent, item, out set);
-        }
-
-        #endregion
-
-
+        
         #region PrivateMethods
 
         /// <summary>
@@ -553,13 +523,103 @@ namespace SPBP.Connector.Manager
 
         }
 
+
+        public static ExecResult ExecDataReadByInheritance<T>(this DataSItem item, DbAgent agent, out IBag<T> container)
+            where T : DbObject
+        {
+            return ExecProcDataReadByInheritance(agent, item, out container);
+        }
+
+        public static ExecResult ExecuteDataReaderByRef<T>(this DataSItem item, DbAgent agent, out IBag<T> container)
+        {
+            return ExecuteProcedureDataReaderByRef(agent, item, out container);
+        }
+
+        public static ExecResult ExecuteNonQuery(this DataSItem itm, DbAgent agent)
+        {
+            return ExecuteNonQueryProcedure(agent, itm);
+
+        }
+
+        public static ExecResult ExecDataSet(this DataSItem item, DbAgent agent, out DataSet set)
+        {
+            return ExecuteProcedureDataSet(agent, item, out set);
+        }
+
+
         #endregion
 
 
-        //not ready yet  
+        
         #region Async
 
+        public static Task< ExecAsyncResult> ExecDataReadByInheritanceAsync<T>(this DataSItem item, DbAgent agent ) where T : DbObject
+        {
+            return Task.Factory.StartNew(() =>
+                {
+
+                    ExecAsyncResult result = new ExecAsyncResult();
+                    IBag<T> container;
+                    ExecResult rs = ExecDataReadByInheritance<T>(item, agent, out container);
+
+                    result.ExecutedProcedure = item;
+                    result.Result = rs;
+                    result.Object = container;
+                    result.ExecutionType=AsyncExecutionType.ExecByINheritance;
+                    return result;
+                });
+        }
        
+        public static Task<ExecAsyncResult> ExecuteDataReaderByRefAsync<T>(this DataSItem item, DbAgent agent)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+
+                ExecAsyncResult result = new ExecAsyncResult();
+                IBag<T> container;
+                ExecResult rs = ExecuteDataReaderByRef<T>(item,agent , out container);
+                result.ExecutedProcedure = item;
+                result.Result = rs;
+                result.Object = container;
+                result.ExecutionType = AsyncExecutionType.ExecByRef;
+                return result;
+            });
+        }
+
+        public static Task<ExecAsyncResult> ExecuteNonQueryAsync(this DataSItem item, DbAgent agent)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+
+                ExecAsyncResult result = new ExecAsyncResult();
+
+                ExecResult rs = ExecuteNonQuery(item, agent);
+
+                result.ExecutedProcedure = item;
+                result.Result = rs;
+                return result;
+            });
+        }
+
+        public static Task<ExecAsyncResult> ExecDataSetAsync(this DataSItem item, DbAgent agent)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+
+                ExecAsyncResult result = new ExecAsyncResult();
+
+                DataSet rsSet;
+                ExecResult rs = ExecDataSet(item, agent, out rsSet);
+                
+                result.ExecutedProcedure = item;
+                result.Result = rs;
+                result.Object = rsSet; 
+                result.ExecutionType=AsyncExecutionType.ExecDataSet;
+                return result;
+            });
+        }
+
+
         #endregion
 
 

@@ -1,0 +1,14 @@
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\bin\Debug\ProcedureExecuter.exe.config
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\bin\Debug\ProcedureExecuter.exe
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\bin\Debug\ProcedureExecuter.pdb
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\obj\Debug\ProcedureExecuter.csprojResolveAssemblyReference.cache
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\obj\Debug\ProcedureExecuter.Contrl.resources
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\obj\Debug\ProcedureExecuter.Form1.resources
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\obj\Debug\ProcedureExecuter.Properties.Resources.resources
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\obj\Debug\ProcedureExecuter.csproj.GenerateResource.Cache
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\obj\Debug\ProcedureExecuter.exe
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\obj\Debug\ProcedureExecuter.pdb
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\bin\Debug\SPBP.dll
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\bin\Debug\SPBP.pdb
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\obj\Debug\ProcedureExecuter.frmparamLoad.resources
+D:\C#\Sources\Tuition\Test\ProcedureExecuter\obj\Debug\ProcedureExecuter.frmAbout.resources

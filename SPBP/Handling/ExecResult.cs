@@ -50,7 +50,7 @@ namespace SPBP.Handling
 
         public override string ToString()
         {
-            return string.Format("Code : {0} - Execution Time :  {1} ms  - Description : {2}",Code.ToString( ),ExecutionTime.ToString( ),Description);
+            return string.Format("Code : {0} - Execution Time :  {1} ms  ",Code.ToString( ),ExecutionTime.ToString( ));
         }
 
         public static implicit operator int(ExecResult result)

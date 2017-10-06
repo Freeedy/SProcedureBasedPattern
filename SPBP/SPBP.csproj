@@ -47,10 +47,11 @@
     <Compile Include="Connector\DBAgent.cs" />
     <Compile Include="Connector\Exceptions\AttributeMissMatchException.cs" />
     <Compile Include="Connector\Interfaces\IDBObject.cs" />
-    <Compile Include="Connector\Manager\DBCommander.cs" />
+    <Compile Include="DBCommander.cs" />
     <Compile Include="Handling\DataParam.cs" />
     <Compile Include="Handling\DataSItem.cs" />
     <Compile Include="Handling\DbCommandManagar.cs" />
+    <Compile Include="Handling\ExecAsyncResult.cs" />
     <Compile Include="Handling\ExecResult.cs" />
     <Compile Include="Handling\ProcedureFactory.cs" />
     <Compile Include="Handling\SettingsHelperManager.cs" />
