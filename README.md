@@ -237,6 +237,7 @@ Execution Methods:
 DataSet
 ```
 ExecAsyncResult res = await _selectedProcedure.ExecDataSetAsync(_currentAgent);
+DataSet setresult=res.Object as DataSet;
 ```
 Non Query
 ```
