@@ -15,12 +15,19 @@ Just add SPBP.DLL to your project. It may be Console, Web or Desktop application
 Here is explanation of Console application code.
 
 First of all you need to declare a DbAgent variable:
-`DbAgent agent = new DbAgent(<name>, <connection string>.<state>);`
+
+```
+DbAgent agent = new DbAgent(<name>, <connection string>.<state>);
+
+```
+
 (If agent state  isn't true  it will throw an exception in  procedure execution . )
 
 Then get the all stored procedures existing in that DataBase:
 
-`ProcedureFactory fact = SqlManager.GetProceduresFactory(agent);`
+```
+ProcedureFactory fact = SqlManager.GetProceduresFactory(agent);
+```
 
 Select the  Procedure:
 
@@ -40,7 +47,9 @@ Set values to parameters if procedure  needs :
                     }
 ```
 Get output params after execution  :
+
 If procedure has output params  it will  be  added  to DsItem Output params . 
+
 ``` 
  if (item.HasOutputParam)
                     {
@@ -51,18 +60,22 @@ If procedure has output params  it will  be  added  to DsItem Output params .
                     }
 ```
 Get marked class collection  : 
+
 ```
 IBag<Item> items;
 ExecResult result = procedure.ExecuteDataReaderByRef(agent, out items);
 ```
 
 OR
+
 ```
 DataSet set = new DataSet();
 procedure.ExecDataSet(agent, out set);
 ```
 ## Code sample 
+
 Examples of  Procedures (has return value , output params , without rows , etc )
+
 	1 . Add Employee stored procedure .  As we can see from the picture 1  it has  return param and  input params . 
 	
 ***Picture1***
