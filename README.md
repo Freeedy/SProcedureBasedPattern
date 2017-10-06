@@ -64,10 +64,11 @@ procedure.ExecDataSet(agent, out set);
 ## Code sample 
 Examples of  Procedures (has return value , output params , without rows , etc )
 	1 . Add Employee stored procedure .  As we can see from the picture 1  it has  return param and  input params . 
+	
 ***Picture1***
-
 	![addemploye](https://user-images.githubusercontent.com/26925601/31275658-30d51872-aaa9-11e7-999c-4852d43d54e3.png)
-	2 . Delete Employee .  It  doesn't return any rows  , but has  return parameter .  
+
+2 . Delete Employee .  It  doesn't return any rows  , but has  return parameter .  
 	
 ***Picture 2***
 
