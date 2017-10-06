@@ -3,15 +3,15 @@
 This project is useful for developers who use MS SQL as their DataBase.
 If during the work you need to execute a lot of Stored Procedures then possibly you need convenient tool for that.
 
-##Overview
+## Overview
 By means of this library you can get the list of all Stored Procedures from DataBase.
 If you want execute one of them you should Load it and provide input parameters. After that SP is executed. In the context of OutPut, SP can be executed in 4 different ways:  return set of rows, return value, return nothing (ExecuteNonQuery), or you can MAP returned object to a class.
 
-##Usage
+## Usage
 
 Just add SPBP.DLL to your project. It may be Console, Web or Desktop application.
 
-##Using example
+## Using example
 Here is explanation of Console application code.
 
 First of all you need to declare a DbAgent variable:
@@ -61,29 +61,26 @@ OR
 DataSet set = new DataSet();
 procedure.ExecDataSet(agent, out set);
 ```
-##Code sample 
-
+## Code sample 
 Examples of  Procedures (has return value , output params , without rows , etc )
-	1 . Add Employee stored procedure .  As we can see from the picture 1  it has  return param and  input params .
-	
+	1 . Add Employee stored procedure .  As we can see from the picture 1  it has  return param and  input params . 
 ***Picture1***
-	
+
 	![addemploye](https://user-images.githubusercontent.com/26925601/31275658-30d51872-aaa9-11e7-999c-4852d43d54e3.png)
-	
 	2 . Delete Employee .  It  doesn't return any rows  , but has  return parameter .  
 	
 ***Picture 2***
-	
-![deleteemployee](https://user-images.githubusercontent.com/26925601/31275768-7a2f7dd2-aaa9-11e7-905f-886c2cb40c76.png)
 
+![deleteemployee](https://user-images.githubusercontent.com/26925601/31275768-7a2f7dd2-aaa9-11e7-905f-886c2cb40c76.png)
 	3. Test procedure .  Has return  param , output params ,  and return rows 
-	
+
 ***Picture 3***
+
 ![testproc](https://user-images.githubusercontent.com/26925601/31275819-c8e2e266-aaa9-11e7-861a-ed38abaebcab.png)
 
-###Execution Sample
+#### Execution Sample 
 
-***First Step***
+***First Step ***
 ```
 DbAgent agent = new DbAgent("Employees", datasource, true); //create db agent 
 ProcedureFactory fact = SqlManager.GetProceduresFactory(agent);  
@@ -91,7 +88,7 @@ fact .AddReturnValueToEachProcedure();
 /*add return parametr to all procedure (by default the procedures doesn't have  return parameter )*/
 
 ```
-***Execute AddEmployee***
+***Execute AddEmployee ***
 ``` 
  DataSItem item = fact.Procedures[proc]; //select target procedure (AddEmployee)
  //fill input params  values 
@@ -118,8 +115,9 @@ When  the  procedure  was executed  the **ExecResult** get the return parameter 
 
 
 **Execute procedure in Picture  3**
-Procedure  selection section is the same  . 
-**Execution**
+Procedure  selection section is the same .
+
+**Execution **
 
 ```
 DataSet set ;
@@ -127,15 +125,15 @@ DataSet set ;
 ```
 And Item willbe  filled with output params . 
 
-##Get List of Marked items 
-###Overview
+## Get List of Marked items 
+#### Overview 
    For example  we want to get  list of  marked  objects  that we declared  in our  project . 
-###How to declare marked  class ?
+#### How to declare marked  class ?
 There are 2 way to mark  your class  as DbObject  . 
 	1. Inherit from DbOBject  and  override Abstract methods in this .  
 	2. Use Custom attributes . (DbObject attribute and  ColumnName)
 
-###Inheritance Example 
+#### Inheritance Example 
 ``` 
  public class Employe:DbObject
     {
@@ -163,13 +161,13 @@ There are 2 way to mark  your class  as DbObject  .
         }
     }
 ```
-Execution  :
+Execution :
 
 ``` 
 IBag<Employe> employes; //get employes fro inherited class
  ExecResult result = fact.Procedures[proc].ExecDataReadByInheritance(agent,out employes);
 ```
-####Attributed item example 
+#### Attributed item example 
 ```
 [DbObject]
     public class NewEmp
@@ -195,16 +193,16 @@ IBag<Employe> employes; //get employes fro inherited class
         public string Department { get; set; }
     }
 ```
-Execution:
+Execution  :
 
 ```
 IBag<NewEmp> employes;
 DataSItem item = fact.Procedures[procname];
 ExecResult result = item.ExecuteDataReaderByRef(agent,out employes);
 ```
-##Asynchronous execution
+## Asynchronous execution
 
-###Async Result item "ExecAsyncResult"
+#### Async Result item "ExecAsyncResult"
 ```
  public class ExecAsyncResult
     {
@@ -245,7 +243,7 @@ ExecAsyncResult result = await _selectedProcedure.ExecDataReadByInheritanceAsync
 
 ```
 
-##History
+## History
 
 ***DLL added***
 
