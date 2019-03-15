@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -37,8 +38,11 @@ namespace ProcedureExecuter
             {
                 _currentAgent = new DbAgent(txtName.Text, txtConstr.Text, chkState.Checked);
                 btnLoad.Enabled = false;
-                await LoadProcedures(_currentAgent);
-                lstProcs.DataSource = _currentFactory.Procedures.Values.ToArray();
+               await  LoadProcedures(_currentAgent);
+                _procedures=new BindingList<DataSItem>( _currentFactory.Procedures.Values.ToArray());
+                lstProcs.DataSource = _procedures;
+                
+               
                 btnLoad.Enabled = true;
                 rTxtresult.AppendColorText(string.Format(" {0} - procedures are  loaded  .  ", _currentFactory.Procedures.Count.ToString()), Color.GreenYellow);
                 _isloaded = true;
@@ -56,15 +60,15 @@ namespace ProcedureExecuter
         #region HelperMethods
 
 
-        private async Task  LoadProcedures( DbAgent agent )
+        private async Task LoadProcedures( DbAgent agent )
         {
-            await Task.Factory.StartNew(() =>
-                {
-                    _currentFactory = SqlManager.GetProceduresFactory(agent);
 
-                });
+            Stopwatch sw = new Stopwatch();
+            sw .Start();
+                    _currentFactory = await  SqlManager.GetProceduresFactoryAsync(agent);
 
-
+            sw.Stop();
+            Console.WriteLine("GetProceduresFactoryAsync - Time : "+ sw.ElapsedMilliseconds.ToString());
         }
       
         #endregion 
@@ -111,11 +115,12 @@ namespace ProcedureExecuter
                 {
                     _selectedProcedure = (lstProcs.SelectedItem as DataSItem);
                 }
-               
+
+                DataSItem temp = _selectedProcedure; 
                 btnExecuteDs.Enabled = false;
                
               
-                await ExecuteDs();
+                await ExecuteDs(temp );
 
                 btnExecuteDs.Enabled = true;
                
@@ -150,9 +155,9 @@ namespace ProcedureExecuter
 
        
 
-        private async Task ExecuteDs( )
+        private async Task ExecuteDs( DataSItem temp )
         {
-            using (frmparamLoad load = new frmparamLoad(_selectedProcedure))
+            using (frmparamLoad load = new frmparamLoad(temp))
             {
                 if (load.ShowDialog() == DialogResult.OK)
                 {
@@ -192,7 +197,7 @@ namespace ProcedureExecuter
             }
         }
 
-        private async Task ExecuteNonQuery()
+        private async Task ExecuteNonQuery(DataSItem temp)
         {
             using (frmparamLoad load = new frmparamLoad(_selectedProcedure))
             {
@@ -245,10 +250,10 @@ namespace ProcedureExecuter
                     _selectedProcedure = (lstProcs.SelectedItem as DataSItem);
                 }
 
-
+                DataSItem temp = _selectedProcedure; 
                 btnExecuteNonQ.Enabled = false;
 
-                await ExecuteNonQuery();
+                await ExecuteNonQuery(temp);
 
 
 

@@ -19,7 +19,7 @@ namespace SPBP.Modules.SQl
 
         private static XmlDocument _tempDoc = new XmlDocument();
 
-        private static string _getAllProcedures = @"select name from sys.procedures  where object_id not in(select major_id from sys.extended_properties)";
+        private static string _getAllProcedures = @"select schema_name(schema_id) as [schema],name from sys.procedures  where object_id not in(select major_id from sys.extended_properties)";
 
         private static string _getParamsOFProc = @"select PARAMETER_NAME , PARAMETER_MODE,DATA_TYPE from information_schema.parameters where specific_name='{0}'";
 
@@ -27,6 +27,53 @@ namespace SPBP.Modules.SQl
         public static DbAgent CurrentAgent { get { return _currentagent; } set { _currentagent = value; } }
 
 
+
+        public static async Task<Dictionary<string, DataSItem>> GetAllSqlProceduresAsync(DbAgent agent = null)
+        {
+            string source;
+
+            Dictionary<string, DataSItem> procedures = new Dictionary<string, DataSItem>();
+            try
+            {
+                if (agent != null)
+                {
+                    source = agent.ConnectionString;
+                }
+                else
+                {
+                    source = _currentagent.ConnectionString;
+                }
+
+                using (SqlConnection con = new SqlConnection(source))
+                {
+                  await   con.OpenAsync().ConfigureAwait(false);
+
+                    using (SqlCommand cmd = new SqlCommand(_getAllProcedures, con))
+                    {
+                        cmd.CommandType = CommandType.Text;
+
+                        SqlDataReader reader = cmd.ExecuteReader();
+                        while ( await reader.ReadAsync().ConfigureAwait(false))
+                        {
+                            DataSItem proc = new DataSItem();
+                            proc.ConnectionString = "-1";
+                            proc.Schema = reader[0].ToString();
+                             proc.Name = reader[1].ToString();
+                            procedures.Add(proc.Value, proc);
+                        }
+
+                    }
+                }
+
+            }
+            catch (Exception exc)
+            {
+
+                throw exc;
+            }
+
+            return procedures;
+        }
         public static Dictionary<string, DataSItem> GetAllSqlProcedures(DbAgent agent = null)
         {
             string source;
@@ -56,7 +103,8 @@ namespace SPBP.Modules.SQl
                         {
                             DataSItem proc = new DataSItem();
                             proc.ConnectionString = "-1";
-                            proc.Value = proc.Name = reader[0].ToString();
+                            proc.Schema = reader[0].ToString(); 
+                            proc.Name = reader[1].ToString();
                             procedures.Add(proc.Value, proc);
                         }
 
@@ -128,7 +176,7 @@ namespace SPBP.Modules.SQl
             {
                 con.Open();
 
-                using (SqlCommand cmd = new SqlCommand(string.Format(_getParamsOFProc, procedure.Value), con))
+                using (SqlCommand cmd = new SqlCommand(string.Format(_getParamsOFProc, procedure.Name), con))
                 {
                     procedure.Params.Clear();
 
@@ -155,6 +203,8 @@ namespace SPBP.Modules.SQl
 
 
         }
+
+       
 
         public static ProcedureFactory GetProceduresFactory(DbAgent agent = null   )
         {
@@ -246,12 +296,23 @@ namespace SPBP.Modules.SQl
                 });
         }
 
-       public static Task<ProcedureFactory> GetProceduresFactoryAsync(DbAgent agent = null)
+       public static async  Task<ProcedureFactory> GetProceduresFactoryAsync(DbAgent agent = null)
        {
-           return Task.Factory.StartNew(()=>
-               {
-                   return GetProceduresFactory(agent);
-               });
+           ProcedureFactory fact = new ProcedureFactory();
+
+
+           Dictionary<string, DataSItem> procedures = await  GetAllSqlProceduresAsync(agent);
+
+           foreach (DataSItem value in procedures.Values)
+           {
+               value.FillPRocedureParamsFromSQLAgent(agent);
+
+           }
+
+
+           fact.SetProcedures(procedures);
+
+           return fact;
        }
 
        public static Task AddReturnValueToEachProcedureAsync(this ProcedureFactory factory)

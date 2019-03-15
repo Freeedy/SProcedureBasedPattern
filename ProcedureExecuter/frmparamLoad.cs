@@ -35,7 +35,15 @@ namespace ProcedureExecuter
             {
                 foreach (Contrl contrl in flowLayoutPanel1.Controls)
                 {
-                    _selectedProcedure.Params[contrl.Description].Value = contrl.Body;
+                    if (contrl.HasValue)
+                    {
+                        _selectedProcedure.Params[contrl.Description].Value = contrl.Body;
+                    }
+                    else
+                    {
+                        _selectedProcedure.Params.Remove(contrl.Description); 
+                    }
+                  
                 }
 
                 _result = _selectedProcedure;

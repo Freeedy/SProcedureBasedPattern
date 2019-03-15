@@ -16,6 +16,8 @@ namespace ProcedureExecuter
 
         public string Body { get { return txtBody.Text; } set { txtBody.Text = value; } }
 
+        public bool HasValue { get { return !chkNullable.Checked;  } }
+
         public Contrl(string desc, string body)
         {
             InitializeComponent();
@@ -26,6 +28,11 @@ namespace ProcedureExecuter
         public Contrl() 
         {
             InitializeComponent();
+        }
+
+        private void chkNullable_CheckedChanged(object sender, EventArgs e)
+        {
+            txtBody.Enabled = !chkNullable.Checked;
         }
     }
 }

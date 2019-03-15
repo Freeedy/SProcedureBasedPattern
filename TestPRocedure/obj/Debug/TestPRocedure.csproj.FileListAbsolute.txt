@@ -1,0 +1,16 @@
+D:\Dev\Github\SProcedureBasedPattern\TestPRocedure\bin\Debug\TestPRocedure.exe.config
+D:\Dev\Github\SProcedureBasedPattern\TestPRocedure\bin\Debug\TestPRocedure.exe
+D:\Dev\Github\SProcedureBasedPattern\TestPRocedure\bin\Debug\TestPRocedure.pdb
+D:\Dev\Github\SProcedureBasedPattern\TestPRocedure\bin\Debug\SPBP.dll
+D:\Dev\Github\SProcedureBasedPattern\TestPRocedure\bin\Debug\SPBP.pdb
+D:\Dev\Github\SProcedureBasedPattern\TestPRocedure\obj\Debug\TestPRocedure.csprojResolveAssemblyReference.cache
+D:\Dev\Github\SProcedureBasedPattern\TestPRocedure\obj\Debug\TestPRocedure.exe
+D:\Dev\Github\SProcedureBasedPattern\TestPRocedure\obj\Debug\TestPRocedure.pdb
+D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\TestPRocedure\bin\Debug\TestPRocedure.exe.config
+D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\TestPRocedure\obj\Debug\TestPRocedure.exe
+D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\TestPRocedure\obj\Debug\TestPRocedure.pdb
+D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\TestPRocedure\bin\Debug\TestPRocedure.exe
+D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\TestPRocedure\bin\Debug\TestPRocedure.pdb
+D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\TestPRocedure\bin\Debug\SPBP.dll
+D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\TestPRocedure\bin\Debug\SPBP.pdb
+D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\TestPRocedure\obj\Debug\TestPRocedure.csprojResolveAssemblyReference.cache

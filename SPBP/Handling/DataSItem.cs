@@ -12,9 +12,15 @@ namespace SPBP.Handling
         
         private Dictionary<string, DataParam> _outputParams = new Dictionary<string, DataParam>();
 
+        private string _name;
+        private string _value;
+        private string _schema; 
+
+
         #region  Properties
-        public string Name { get; set; }
-        public string Value { get; set; }
+        public string Name { get { return _name; } set { _name = value;  } }
+        public string Value { get { return _schema + '.' + _name; } }
+        public string Schema { get { return _schema; } set { _schema = value;  } }
         public Dictionary<string, DataParam> Params
         {
             get { return _params; }
@@ -45,7 +51,7 @@ namespace SPBP.Handling
         #region  MEthods
 
         /*
-         * <item name="" value=""  constr="">
+         * <item name="" schema=""  constr="">
       <param name="" type="0" IsOutput="0"/>
     </item>*/
         public void ReadParamsFromXml(XmlNode xmlItem)
@@ -54,7 +60,8 @@ namespace SPBP.Handling
             {
                 _params.Clear();
                 Name = xmlItem.Attributes["name"].Value;
-                Value = xmlItem.Attributes["value"].Value;
+              //  Value = xmlItem.Attributes["value"].Value;
+                Schema = xmlItem.Attributes["schema"].Value;
                 ConnectionString = xmlItem.Attributes["constr"].Value;
 
                 if (xmlItem.HasChildNodes)
@@ -115,7 +122,7 @@ namespace SPBP.Handling
             return param;
         }
 
-        //<item name="Add_AccesList_table" value="Add_AccesList_table"  constr="">
+        //<item name="Add_AccesList_table" schema="dbo"  constr="">
         public XmlNode ToXmlNode()
         {
             XmlNode result = null;
@@ -125,7 +132,7 @@ namespace SPBP.Handling
 
                 XmlElement element = DbCommandManagar.ConfigurationDocument.CreateElement("item");
                 element.SetAttribute("name", Name);
-                element.SetAttribute("value", Value);
+                element.SetAttribute("schema", Schema);
                 element.SetAttribute("constr", ConnectionString);
                 foreach (DataParam param in Params.Values)
                 {

@@ -41,7 +41,7 @@
             this.flowLayoutPanel1.AutoScroll = true;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(283, 391);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(367, 391);
             this.flowLayoutPanel1.TabIndex = 0;
             // 
             // btnOk
@@ -59,7 +59,7 @@
             // 
             this.btnCansel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCansel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCansel.Location = new System.Drawing.Point(197, 397);
+            this.btnCansel.Location = new System.Drawing.Point(281, 397);
             this.btnCansel.Name = "btnCansel";
             this.btnCansel.Size = new System.Drawing.Size(75, 23);
             this.btnCansel.TabIndex = 1;
@@ -73,7 +73,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCansel;
-            this.ClientSize = new System.Drawing.Size(284, 432);
+            this.ClientSize = new System.Drawing.Size(368, 432);
             this.Controls.Add(this.btnCansel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.flowLayoutPanel1);
