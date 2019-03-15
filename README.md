@@ -15,12 +15,19 @@ Just add SPBP.DLL to your project. It may be Console, Web or Desktop application
 Here is explanation of Console application code.
 
 First of all you need to declare a DbAgent variable:
-`DbAgent agent = new DbAgent(<name>, <connection string>.<state>);`
+
+```
+DbAgent agent = new DbAgent(<name>, <connection string>.<state>);
+
+```
+
 (If agent state  isn't true  it will throw an exception in  procedure execution . )
 
 Then get the all stored procedures existing in that DataBase:
 
-`ProcedureFactory fact = SqlManager.GetProceduresFactory(agent);`
+```
+ProcedureFactory fact = SqlManager.GetProceduresFactory(agent);
+```
 
 Select the  Procedure:
 
@@ -40,7 +47,9 @@ Set values to parameters if procedure  needs :
                     }
 ```
 Get output params after execution  :
+
 If procedure has output params  it will  be  added  to DsItem Output params . 
+
 ``` 
  if (item.HasOutputParam)
                     {
@@ -51,30 +60,41 @@ If procedure has output params  it will  be  added  to DsItem Output params .
                     }
 ```
 Get marked class collection  : 
+
 ```
 IBag<Item> items;
 ExecResult result = procedure.ExecuteDataReaderByRef(agent, out items);
 ```
 
 OR
+
 ```
 DataSet set = new DataSet();
 procedure.ExecDataSet(agent, out set);
 ```
-##Code sample 
+## Code sample 
+
 Examples of  Procedures (has return value , output params , without rows , etc )
+
 	1 . Add Employee stored procedure .  As we can see from the picture 1  it has  return param and  input params . 
-	***Picture1***
+	
+***Picture1***
 	![addemploye](https://user-images.githubusercontent.com/26925601/31275658-30d51872-aaa9-11e7-999c-4852d43d54e3.png)
-	2 . Delete Employee .  It  doesn't return any rows  , but has  return parameter .  
-	***Picture 2***
+
+2 . Delete Employee .  It  doesn't return any rows  , but has  return parameter .  
+	
+***Picture 2***
+
 ![deleteemployee](https://user-images.githubusercontent.com/26925601/31275768-7a2f7dd2-aaa9-11e7-905f-886c2cb40c76.png)
 	3. Test procedure .  Has return  param , output params ,  and return rows 
+
 ***Picture 3***
+
 ![testproc](https://user-images.githubusercontent.com/26925601/31275819-c8e2e266-aaa9-11e7-861a-ed38abaebcab.png)
 
-####Execution Sample 
-***First Step ***
+#### Execution Sample 
+
+***First Step***
 ```
 DbAgent agent = new DbAgent("Employees", datasource, true); //create db agent 
 ProcedureFactory fact = SqlManager.GetProceduresFactory(agent);  
@@ -82,7 +102,7 @@ fact .AddReturnValueToEachProcedure();
 /*add return parametr to all procedure (by default the procedures doesn't have  return parameter )*/
 
 ```
-***Execute AddEmployee ***
+***Execute AddEmployee***
 ``` 
  DataSItem item = fact.Procedures[proc]; //select target procedure (AddEmployee)
  //fill input params  values 
@@ -96,7 +116,7 @@ fact .AddReturnValueToEachProcedure();
 
                     }
 ```
-***Execute equiped procedure ***
+***Execute equiped procedure***
 ``` 
 //execute procedure 
 ExecResult res = DBCommander.ExecuteNonQueryProcedure(agent, item);
@@ -108,9 +128,10 @@ ExecResult res = DBCommander.ExecuteNonQueryProcedure(agent, item);
 When  the  procedure  was executed  the **ExecResult** get the return parameter  and  the time of execution . In order to display  you need just use **res.ToString()** method .
 
 
-**Execute procedure in Picture  3 **
-Procedure  selection section is the same  . 
-**Execution **
+**Execute procedure in Picture  3**
+Procedure  selection section is the same .
+
+**Execution**
 
 ```
 DataSet set ;
@@ -118,15 +139,15 @@ DataSet set ;
 ```
 And Item willbe  filled with output params . 
 
-##Get List of Marked items 
-####Overview 
+## Get List of Marked items 
+#### Overview 
    For example  we want to get  list of  marked  objects  that we declared  in our  project . 
-####How to declare marked  class ?
+#### How to declare marked  class ?
 There are 2 way to mark  your class  as DbObject  . 
 	1. Inherit from DbOBject  and  override Abstract methods in this .  
 	2. Use Custom attributes . (DbObject attribute and  ColumnName)
 
-####Inheritance Example 
+#### Inheritance Example 
 ``` 
  public class Employe:DbObject
     {
@@ -154,13 +175,13 @@ There are 2 way to mark  your class  as DbObject  .
         }
     }
 ```
-Execution  :
+Execution :
 
 ``` 
 IBag<Employe> employes; //get employes fro inherited class
  ExecResult result = fact.Procedures[proc].ExecDataReadByInheritance(agent,out employes);
 ```
-####Attributed item example 
+#### Attributed item example 
 ```
 [DbObject]
     public class NewEmp
@@ -193,9 +214,9 @@ IBag<NewEmp> employes;
 DataSItem item = fact.Procedures[procname];
 ExecResult result = item.ExecuteDataReaderByRef(agent,out employes);
 ```
-##Asynchronous execution
+## Asynchronous execution
 
-####Async Result item "ExecAsyncResult"
+#### Async Result item "ExecAsyncResult"
 ```
  public class ExecAsyncResult
     {
@@ -216,6 +237,7 @@ Execution Methods:
 DataSet
 ```
 ExecAsyncResult res = await _selectedProcedure.ExecDataSetAsync(_currentAgent);
+DataSet setresult=res.Object as DataSet;
 ```
 Non Query
 ```
@@ -239,7 +261,9 @@ ExecAsyncResult result = await _selectedProcedure.ExecDataReadByInheritanceAsync
 ## History
 
 ***DLL added***
-***Procedure executor added ***
+
+***Procedure executor added***
+
 ***Library update(added  asynchronous  methods  of execution )***
 
 
