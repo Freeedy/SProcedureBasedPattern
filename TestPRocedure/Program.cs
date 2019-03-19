@@ -162,11 +162,10 @@ namespace TestPRocedure
             Task compleateT = RunLimitedNumberAtATime(10, Enumerable.Range(1, count), async x =>
                 Task.Factory.StartNew(async () =>
                 {
+                    Console.WriteLine("Start! ");
                     // itm.Params["@path"].Value = Guid.NewGuid().ToString();
                     ExecAsyncResult res = await itm.ExecuteDataReaderByRefAsync<Img>(agent);
                     IBag<Img> images = res.Object as IBag<Img>;
-
-
                     Console.WriteLine("Item Count : " + images.Objects.Count.ToString() + "  " + res.ToString());
                 }, TaskCreationOptions.LongRunning));
 
@@ -297,6 +296,8 @@ namespace TestPRocedure
         //Data Source=FREEDY-PC;Initial Catalog=Mars_db;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False
         static void Main(string[] args)
         {
+            
+
             DbAgent agent = new DbAgent("marsDb", "Data Source=FREEDY;Initial Catalog=Mars_db;Integrated Security=True",
                                         true);
 
@@ -316,10 +317,10 @@ namespace TestPRocedure
            // GetImgsync(agent);
             //Item Count : 158328  [Code : 1 - Execution Time :  356 ms  ] - Type : ExecByRef
             //Item Count : 158328  [Code : 1 - Execution Time :  977 ms  ] - Type : ExecByINheritance
-        //  ReflectionGetAsync(agent).Wait();
+          ReflectionGetAsync(agent).Wait();
           //InheritanceGEtAsync(agent).Wait();
 
-            ImagesGigImagesGET(20, agent).Wait(); 
+            //ImagesGigImagesGET(2, agent).Wait(); 
             sw.Stop();
 
             Console.WriteLine("Compleated : " + sw.ElapsedMilliseconds.ToString());

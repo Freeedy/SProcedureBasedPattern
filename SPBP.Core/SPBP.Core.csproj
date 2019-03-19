@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/Freeedy/SProcedureBasedPattern</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/Freeedy/SProcedureBasedPattern#license</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/Freeedy/SProcedureBasedPattern</RepositoryUrl>
+    <PackageTags>C#</PackageTags>
+    <Authors>@Freeedy</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
+  </ItemGroup>
+
+</Project>

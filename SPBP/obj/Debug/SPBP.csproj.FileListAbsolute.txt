@@ -11,4 +11,5 @@ D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\SPBP\obj\Debug\SPBP.dll
 D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\SPBP\bin\Debug\SPBP.dll
 D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\SPBP\bin\Debug\SPBP.pdb
 D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\SPBP\obj\Debug\SPBP.pdb
-D:\Dev\Github\SProcedureBasedPattern\SPBP\obj\Debug\SPBP.csprojResolveAssemblyReference.cache
+D:\Dev\Github\SProcedureBasedPattern\SPBP\obj\Debug\SPBP.csprojAssemblyReference.cache
+D:\Dev\Github\SProcedureBasedPattern\SPBP\obj\Debug\SPBP.csproj.CoreCompileInputs.cache

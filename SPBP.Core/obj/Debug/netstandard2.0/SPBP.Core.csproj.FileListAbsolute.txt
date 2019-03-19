@@ -1,0 +1,9 @@
+D:\Dev\Github\SProcedureBasedPattern\SPBP.Core\bin\Debug\netstandard2.0\SPBP.Core.deps.json
+D:\Dev\Github\SProcedureBasedPattern\SPBP.Core\bin\Debug\netstandard2.0\SPBP.Core.dll
+D:\Dev\Github\SProcedureBasedPattern\SPBP.Core\bin\Debug\netstandard2.0\SPBP.Core.pdb
+D:\Dev\Github\SProcedureBasedPattern\SPBP.Core\obj\Debug\netstandard2.0\SPBP.Core.csproj.CoreCompileInputs.cache
+D:\Dev\Github\SProcedureBasedPattern\SPBP.Core\obj\Debug\netstandard2.0\SPBP.Core.AssemblyInfoInputs.cache
+D:\Dev\Github\SProcedureBasedPattern\SPBP.Core\obj\Debug\netstandard2.0\SPBP.Core.AssemblyInfo.cs
+D:\Dev\Github\SProcedureBasedPattern\SPBP.Core\obj\Debug\netstandard2.0\SPBP.Core.dll
+D:\Dev\Github\SProcedureBasedPattern\SPBP.Core\obj\Debug\netstandard2.0\SPBP.Core.pdb
+D:\Dev\Github\SProcedureBasedPattern\SPBP.Core\obj\Debug\netstandard2.0\SPBP.Core.csprojAssemblyReference.cache

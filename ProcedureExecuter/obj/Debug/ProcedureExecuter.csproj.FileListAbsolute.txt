@@ -19,7 +19,6 @@ D:\Dev\Github\SProcedureBasedPattern\ProcedureExecuter\bin\Debug\ProcedureExecut
 D:\Dev\Github\SProcedureBasedPattern\ProcedureExecuter\bin\Debug\ProcedureExecuter.pdb
 D:\Dev\Github\SProcedureBasedPattern\ProcedureExecuter\bin\Debug\SPBP.dll
 D:\Dev\Github\SProcedureBasedPattern\ProcedureExecuter\bin\Debug\SPBP.pdb
-D:\Dev\Github\SProcedureBasedPattern\ProcedureExecuter\obj\Debug\ProcedureExecuter.csprojResolveAssemblyReference.cache
 D:\Dev\Github\SProcedureBasedPattern\ProcedureExecuter\obj\Debug\ProcedureExecuter.Contrl.resources
 D:\Dev\Github\SProcedureBasedPattern\ProcedureExecuter\obj\Debug\ProcedureExecuter.Form1.resources
 D:\Dev\Github\SProcedureBasedPattern\ProcedureExecuter\obj\Debug\ProcedureExecuter.frmAbout.resources
@@ -40,3 +39,6 @@ D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\ProcedureExecuter\obj\Debug
 D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\ProcedureExecuter\obj\Debug\ProcedureExecuter.frmparamLoad.resources
 D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\ProcedureExecuter\obj\Debug\ProcedureExecuter.Properties.Resources.resources
 D:\Dev\GitRepositories\GithUB\SProcedureBasedPattern\ProcedureExecuter\obj\Debug\ProcedureExecuter.csproj.GenerateResource.Cache
+D:\Dev\Github\SProcedureBasedPattern\ProcedureExecuter\obj\Debug\ProcedureExecuter.csprojAssemblyReference.cache
+D:\Dev\Github\SProcedureBasedPattern\ProcedureExecuter\obj\Debug\ProcedureExecuter.csproj.CoreCompileInputs.cache
+D:\Dev\Github\SProcedureBasedPattern\ProcedureExecuter\obj\Debug\ProcedureExecuter.csproj.CopyComplete
