@@ -1,9 +1,12 @@
-﻿namespace SPBP.Connector
+﻿using System.Data.SqlClient;
+
+namespace SPBP.Connector
 {
     public class DbAgent
     {
         private string _connectionString=string .Empty ;
-
+        SqlConnection _con;
+        SqlTransaction tran; 
         private bool _state = false; 
 
         public string Name { get; set;  }
@@ -25,6 +28,8 @@
             
         }
 
+
+
         public void SetConnectionString(string constr)
         {
             _connectionString = constr;
@@ -43,6 +48,24 @@
             _state = state;
         }
       
+        public bool OpenConnection()
+        {
+            try
+            {
+                _con = new SqlConnection(_connectionString);
+                _con.Open();
+                return true; 
+            }
+            catch (System.Exception)
+            {
+
+                throw;
+            }
+           
+        }
+
+
+
 
     }
 }

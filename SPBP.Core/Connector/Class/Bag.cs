@@ -16,7 +16,7 @@ namespace SPBP.Connector.Class
 
         public List<T> Objects { get { return _objects; } }
 
-        private T _currentField;//= (T) Activator.CreateInstance(typeof(T));
+        private T _currentField;
 
         
 
@@ -29,7 +29,7 @@ namespace SPBP.Connector.Class
         public void SetFromReader(ref SqlDataReader reader)
         {
 
-            // _currentField .CreateInstance();
+           
             _currentField = (T)Activator.CreateInstance(typeof(T));
             _currentField.SetItemFromDb(ref reader);
             _objects.Add(_currentField);
