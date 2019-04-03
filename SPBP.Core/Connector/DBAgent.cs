@@ -1,13 +1,22 @@
-﻿using System.Data.SqlClient;
+﻿using System;
+using System.Data.SqlClient;
 
 namespace SPBP.Connector
 {
-    public class DbAgent
+    public enum AgentState
+    {
+        Connected=0 , 
+        HasTransaction
+
+    }
+
+    public class DbAgent:IDisposable
     {
         private string _connectionString=string .Empty ;
         SqlConnection _con;
-        SqlTransaction tran; 
-        private bool _state = false; 
+        SqlTransaction _tran; 
+        private bool _state = false;
+        bool _disposed = false;
 
         public string Name { get; set;  }
         public string ConnectionString { get { return _connectionString; } }
@@ -28,6 +37,7 @@ namespace SPBP.Connector
             
         }
 
+        
 
 
         public void SetConnectionString(string constr)
@@ -48,24 +58,68 @@ namespace SPBP.Connector
             _state = state;
         }
       
-        public bool OpenConnection()
-        {
-            try
-            {
+
+        public void OpenConnection()
+        {     
                 _con = new SqlConnection(_connectionString);
                 _con.Open();
-                return true; 
-            }
-            catch (System.Exception)
+                 if(_con.State==System.Data.ConnectionState.Open)
             {
 
-                throw;
             }
            
+        }
+
+        public void CloseConnection()
+        {
+            _con.Close();
+        }
+
+
+        public void BeginTransaction()
+        {
+            if()
+        }
+        public void CommitTransaction()
+        {
+
+        }
+
+        public void RollbackTransaction()
+        {
+
         }
 
 
 
 
+
+        protected  virtual void Dispose(bool disposing)
+        {
+            if(!_disposed)
+            {
+               
+                if(disposing)
+                {
+                    if(_tran!=null)
+                    {
+                        _tran.Dispose(); 
+                    }
+
+                    if(_con!=null)
+                    {
+                        _con.Dispose();
+                        
+                    }
+                }
+                _disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
     }
 }
