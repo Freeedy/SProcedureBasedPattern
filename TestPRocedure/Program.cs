@@ -14,6 +14,7 @@ using System.Threading;
 using System.Diagnostics;
 using SPBP.Connector.Attributes;
 using SPBP.Connector.Abstract;
+using System.Dynamic;
 
 namespace TestPRocedure
 {
@@ -29,8 +30,7 @@ namespace TestPRocedure
 
 
     }
-
-
+    
     public class ImgInh:DbObject
     {
         public int Id { get; set; }
@@ -53,7 +53,7 @@ namespace TestPRocedure
     class Program
     {
 
-
+        
 
         public static async Task RunLimitedNumberAtATime<T>(int numberOfTasksConcurrent, IEnumerable<T> inputList, Func<T, Task> asyncFunc)
         {
@@ -296,7 +296,7 @@ namespace TestPRocedure
         //Data Source=FREEDY-PC;Initial Catalog=Mars_db;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False
         static void Main(string[] args)
         {
-            
+           
 
 
 

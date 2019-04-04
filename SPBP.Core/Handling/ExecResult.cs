@@ -10,7 +10,7 @@ namespace SPBP.Handling
     public class ExecResult
     {
         private Stopwatch _sw=new Stopwatch()  ;
-        private int _resultCode = -1; //by default 
+        private int _resultCode = -1; //by default  -2 error 
         private string _description = "Default result code";
         private long  _execTimeSecond = 0;
 
@@ -43,9 +43,13 @@ namespace SPBP.Handling
             _execTimeSecond = _sw.Elapsed.Milliseconds;
         }
 
-        public void SetCode(int code)
+        public void SetCode(int code ,string desc = null)
         {
             _resultCode = code;
+            if(_description!=null)
+            {
+                _description = desc;
+            }
         }
 
         public override string ToString()

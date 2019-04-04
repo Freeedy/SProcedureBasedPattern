@@ -17,7 +17,7 @@ namespace SpbpCoreTest
     [DbObject]
     public class Img
     {
-        [ColumnName]
+        [ColumnName()]
         public int Id { get; set; }
 
         [ColumnName]
@@ -168,6 +168,54 @@ namespace SpbpCoreTest
             await compleateT;
         }
 
+        static async void NewImagesViaAgent(DbAgent agent )
+        {
+            DataSItem itm = new DataSItem
+            {
+                //  itm.Schema = "general";
+                Schema = "dbo",
+                Name = "Images_NewINstance"
+            };
+            itm.AddParam(new DataParam("@path", CustomSqlTypes.String));
+            itm.AddReturnParam(CustomSqlTypes.Int);
+
+            itm.Params["@path"].Value = Guid.NewGuid().ToString();
+
+            await agent.OpenConnectionAsync();
+
+            ExecAsyncResult res = await itm.ExecuteNonQueryAsync(agent);
+            Console.WriteLine(res.ToString());
+
+             res = await itm.ExecuteNonQueryAsync(agent);
+            Console.WriteLine(res.ToString());
+            agent.Dispose(); 
+            
+
+        }
+
+        static void NewImagesViaAgentSync(DbAgent agent )
+        {
+            DataSItem itm = new DataSItem
+            {
+                //  itm.Schema = "general";
+                Schema = "general",
+                Name = "Images_NewINstance"
+            };
+            itm.AddParam(new DataParam("@path", CustomSqlTypes.String));
+            itm.AddReturnParam(CustomSqlTypes.Int);
+
+            itm.Params["@path"].Value = Guid.NewGuid().ToString();
+
+             agent.OpenConnection();
+
+            ExecResult res =  itm.ExecuteNonQuery(agent);
+            Console.WriteLine(res.ToString());
+
+            res = itm.ExecuteNonQuery(agent);
+            Console.WriteLine(res.ToString());
+            agent.Dispose();
+        }
+
         static async void NewImages(int count, DbAgent agent)
         {
             //Images_NewINstance
@@ -300,7 +348,7 @@ namespace SpbpCoreTest
         {
          
             DbAgent agent = new DbAgent("marsDb", "Data Source=FREEDY;Initial Catalog=Mars_db;Integrated Security=True",
-                                       true);
+                                       true ,ConnectionLevel.AllInOne);
 
             //  DbAgent mrAgent = new DbAgent("Mircelal",
             //                            @"Data Source=MIRJALAL\SQLEXPRESS;Initial Catalog=payment;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False", true);
@@ -319,9 +367,12 @@ namespace SpbpCoreTest
             //Item Count : 158328  [Code : 1 - Execution Time :  356 ms  ] - Type : ExecByRef
             //Item Count : 158328  [Code : 1 - Execution Time :  977 ms  ] - Type : ExecByINheritance
             //  ReflectionGetAsync(agent).Wait();
-            InheritanceGEtAsync(agent).Wait();
+            // InheritanceGEtAsync(agent).Wait();
 
-           // ImagesGigImagesGET(2, agent).Wait();
+            // ImagesGigImagesGET(2, agent).Wait();
+
+            //            NewImagesViaAgent(agent); 
+            NewImagesViaAgentSync(agent);
             sw.Stop();
 
             Console.WriteLine("Compleated : " + sw.ElapsedMilliseconds.ToString());
