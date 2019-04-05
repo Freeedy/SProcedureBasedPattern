@@ -168,12 +168,12 @@ namespace SpbpCoreTest
             await compleateT;
         }
 
-        static async void NewImagesViaAgent(DbAgent agent )
+        static async Task NewImagesViaAgent(DbAgent agent )
         {
             DataSItem itm = new DataSItem
             {
                 //  itm.Schema = "general";
-                Schema = "dbo",
+                Schema = "general",
                 Name = "Images_NewINstance"
             };
             itm.AddParam(new DataParam("@path", CustomSqlTypes.String));
@@ -209,8 +209,8 @@ namespace SpbpCoreTest
              agent.OpenConnection();
 
             ExecResult res =  itm.ExecuteNonQuery(agent);
-            Console.WriteLine(res.ToString());
 
+            Console.WriteLine(res.ToString());
             res = itm.ExecuteNonQuery(agent);
             Console.WriteLine(res.ToString());
             agent.Dispose();
@@ -371,8 +371,8 @@ namespace SpbpCoreTest
 
             // ImagesGigImagesGET(2, agent).Wait();
 
-            //            NewImagesViaAgent(agent); 
-            NewImagesViaAgentSync(agent);
+                      NewImagesViaAgent(agent).Wait(); 
+          //  NewImagesViaAgentSync(agent);
             sw.Stop();
 
             Console.WriteLine("Compleated : " + sw.ElapsedMilliseconds.ToString());
