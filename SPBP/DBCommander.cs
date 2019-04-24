@@ -26,6 +26,8 @@ namespace SPBP
 
 
         #region Fields
+
+        static object _lockObj = new object();
         private static SqlDataReader _reader;
         private static SqlDataAdapter _adapter;
         private static XmlDocument _manDoc = new XmlDocument();
@@ -164,7 +166,7 @@ namespace SPBP
 
             if (agent != null && agent.State)
             {
-                return ExecuteProcedureDR<T>(item, out container, agent.ConnectionString);
+                return ExecuteProcedureDR<T>(item, out container, agent);
             }
             else
             {
@@ -178,7 +180,7 @@ namespace SPBP
 
             if (agent != null && agent.State)
             {
-                return ExecuteProcedureDRByReflection<T>(item, out container, agent.ConnectionString);
+                return ExecuteProcedureDRByReflection<T>(item, out container, agent);
             }
             else
             {
@@ -190,9 +192,8 @@ namespace SPBP
         {
             if (agent != null && agent.State)
             {
-                string cnt = agent.ConnectionString;
 
-                return ExecuteProcedureNonQuery(itm, cnt);
+                return ExecuteProcedureNonQuery(itm, agent);
             }
             else
             {
@@ -204,16 +205,16 @@ namespace SPBP
         {
             if (agent != null && agent.State)
             {
-                string cnt = agent.ConnectionString;
 
-                return ExecuteDS(item, out set, cnt);
+
+                return ExecuteDS(item, out set, agent);
             }
             else
             {
                 throw new Exception("Agent is  null  or state  is false  ");
             }
         }
-        
+
         #region PrivateMethods
 
         /// <summary>
@@ -223,7 +224,7 @@ namespace SPBP
         /// <param name="container">Bag container </param>
         /// <param name="datasource"></param>
         /// <returns>return value of  procedure </returns>
-        private static ExecResult ExecuteProcedureDR<T>(DataSItem proc, out  IBag<T> container, string datasource = null) where T : DbObject
+        private static ExecResult ExecuteProcedureDR<T>(DataSItem proc, out IBag<T> container, DbAgent datasource) where T : DbObject
         {
             ExecResult result = new ExecResult();
             SqlCommand cmd = null;
@@ -231,54 +232,91 @@ namespace SPBP
             result.StartMeasure();
 
             container = new Bag<T>();
-            string constr = datasource ?? proc.ConnectionString;
+
 
             try
             {
                 // create and open a connection object "Data Source=FARID-PC;Initial Catalog=InsuranceFactory;Integrated Security=True"
-                _conn = new
-                    SqlConnection(constr);
-                _conn.Open();
-                cmd = new SqlCommand(proc.Value, _conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                SqlParameter param;
 
-                foreach (var item in proc.Params.Values)
+                SqlConnection con = null;
+                if (datasource.ConnectionLevel == ConnectionLevel.Single)//&& datasource.AgentState != AgentState.Connected)
                 {
-                    param = new SqlParameter();
-                    param.ParameterName = item.Name;
-                    param.Value = item.Value;
-                    param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(item.Type);
-                    param.Direction = SettingsHelperManager.GetParametrDirection(item.Direction);
-                    cmd.Parameters.Add(param);
-                }
-                _reader = cmd.ExecuteReader();
-                while (_reader.Read())
-                {
-                    container.SetFromReader(ref _reader);
-                }
-                _reader.Close();
+                    con = datasource.CreateConnection();
+                    con.Open();
 
-                //set outputparams values 
-                if (proc.HasOutputParam)
+                }
+                else if (datasource.ConnectionLevel == ConnectionLevel.AllInOne)
                 {
-                    foreach (DataParam value in proc.OutputParams.Values)
+                    con = datasource.Connection;
+                }
+
+                // return if is not connected
+                if (con == null || con.State != ConnectionState.Open)
+                {
+                    result.SetCode(-2, "Not connected ! ");
+                    result.StopMeashure();
+                    return result;
+                }
+
+
+                using (cmd = new SqlCommand(proc.Value, con))
+                {
+                    cmd.CommandTimeout = datasource.RunTimeout;
+                    //set transaction
+                    if (datasource.TransactionState == TransactionState.ActiveTransaction)
                     {
-                        value.Value = cmd.Parameters[value.Name].Value.ToString();
-                    }
-                }
-
-                if (cmd.Parameters.Count > 0)
-                {
-                    if (cmd.Parameters[proc.GetparamsByDirection(ParamDirection.Return)[0].Name] != null)
-                    {
-                        result.SetCode((int)cmd.Parameters[proc.GetparamsByDirection(ParamDirection.Return)[0].Name].Value);
+                        cmd.Transaction = datasource.Transaction;
                     }
 
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    SqlParameter param;
+
+                    foreach (var item in proc.Params.Values)
+                    {
+                        param = new SqlParameter
+                        {
+                            ParameterName = item.Name,
+                            Value = item.Value,
+                            SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(item.Type),
+                            Direction = SettingsHelperManager.GetParametrDirection(item.Direction)
+                        };
+                        cmd.Parameters.Add(param);
+                    }
+                    using (_reader = cmd.ExecuteReader())
+                    {
+                        while (_reader.Read())
+                        {
+                            container.SetFromReader(ref _reader);
+                        }
+
+                    }
+                    //set outputparams values 
+                    if (proc.HasOutputParam)
+                    {
+                        foreach (DataParam value in proc.OutputParams.Values)
+                        {
+                            value.Value = cmd.Parameters[value.Name].Value.ToString();
+                        }
+                    }
+
+                    if (cmd.Parameters.Count > 0)
+                    {
+                        if (cmd.Parameters[proc.GetparamsByDirection(ParamDirection.Return)[0].Name] != null)
+                        {
+                            result.SetCode(Convert.ToInt32(cmd.Parameters[proc.GetparamsByDirection(ParamDirection.Return)[0].Name].Value));
+                        }
+
+                    }
+                    //_conn.Close();
+                    // } end of using 
+                    //&& datasource.AgentState != AgentState.Disconnected)
+                    if (datasource.ConnectionLevel == ConnectionLevel.Single && con != null)//&& con.State != ConnectionState.Closed)
+                    {
+                        con.Dispose();
+                    }
+
+
                 }
-                _conn.Close();
-
-
             }
             catch (Exception exc)
             {
@@ -289,39 +327,74 @@ namespace SPBP
             return result;
         }
 
-        private static ExecResult ExecuteProcedureDRByReflection<T>(DataSItem proc, out  IBag<T> container, string datasource = null)
+        private static ExecResult ExecuteProcedureDRByReflection<T>(DataSItem proc, out IBag<T> container, DbAgent datasource)
         {
             ExecResult result = new ExecResult();  // when user doesn't set return  parameter 
             SqlCommand cmd = null;
             container = new RefBag<T>();
-            string constr = datasource ?? proc.ConnectionString;
+
 
             result.StartMeasure();
             try
             {
                 // create and open a connection object "Data Source=FARID-PC;Initial Catalog=InsuranceFactory;Integrated Security=True"
-                using (_conn = new SqlConnection(constr))
-                {
-                    _conn.Open();
-                    cmd = new SqlCommand(proc.Value, _conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    SqlParameter param;
+                //using (_conn = new SqlConnection(constr))
+                //{
 
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    foreach (var item in proc.Params.Values)
+                SqlConnection con = null;
+                if (datasource.ConnectionLevel == ConnectionLevel.Single)//&& datasource.AgentState != AgentState.Connected)
+                {
+                    con = datasource.CreateConnection();
+                    con.Open();
+
+                }
+                else if (datasource.ConnectionLevel == ConnectionLevel.AllInOne)
+                {
+                    con = datasource.Connection;
+                }
+
+                // return if is not connected
+                if (con == null || con.State != ConnectionState.Open)
+                {
+                    result.SetCode(-2, "Not connected ! ");
+                    result.StopMeashure();
+                    return result;
+                }
+
+                cmd = new SqlCommand(proc.Value, con)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                    CommandTimeout = datasource.RunTimeout
+                };
+                SqlParameter param;
+
+                //set transaction
+                if (datasource.TransactionState == TransactionState.ActiveTransaction)
+                {
+                    cmd.Transaction = datasource.Transaction;
+                }
+
+                cmd.CommandType = CommandType.StoredProcedure;
+                foreach (var item in proc.Params.Values)
+                {
+                    param = new SqlParameter
                     {
-                        param = new SqlParameter();
-                        param.ParameterName = item.Name;
-                        param.Value = item.Value;
-                        param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(item.Type);
-                        param.Direction = SettingsHelperManager.GetParametrDirection(item.Direction);
-                        cmd.Parameters.Add(param);
-                    }
-                    _reader = cmd.ExecuteReader();
-                    while (_reader.Read())
-                    {
-                        container.SetFromReader(ref _reader);
-                    }
+                        ParameterName = item.Name,
+                        Value = item.Value,
+                        SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(item.Type),
+                        Direction = SettingsHelperManager.GetParametrDirection(item.Direction)
+                    };
+                    cmd.Parameters.Add(param);
+                }
+                _reader = cmd.ExecuteReader();
+                while (_reader.Read())
+                {
+                    container.SetFromReader(ref _reader);
+                }
+                // } end of using 
+                if (datasource.ConnectionLevel == ConnectionLevel.Single && con != null)//&& con.State!=ConnectionState.Closed)
+                {
+                    con.Dispose();
                 }
 
                 //set outputparams values 
@@ -340,16 +413,10 @@ namespace SPBP
                     {
                         if (cmd.Parameters[ret[0].Name] != null)
                         {
-                            result.SetCode((int)cmd.Parameters[proc.GetparamsByDirection(ParamDirection.Return)[0].Name].Value);
+                            result.SetCode(Convert.ToInt32(cmd.Parameters[proc.GetparamsByDirection(ParamDirection.Return)[0].Name].Value));
                         }
                     }
-
-
                 }
-
-                _conn.Close();
-
-
             }
             catch (Exception exc)
             {
@@ -360,140 +427,213 @@ namespace SPBP
             return result;
         }
 
-
-        private static ExecResult ExecuteProcedureNonQuery(DataSItem itm, string datasource = null)
+        private static ExecResult ExecuteProcedureNonQuery(DataSItem itm, DbAgent datasource)
         {
             ExecResult retval = new ExecResult();
-            string constr = datasource ?? itm.ConnectionString;
-            using (_conn = new SqlConnection(constr))
+
+            //using (_conn = new SqlConnection(constr))
+            //{
+
+
+            retval.StartMeasure();
+
+            SqlConnection con = null;
+            if (datasource.ConnectionLevel == ConnectionLevel.Single)//&& datasource.AgentState != AgentState.Connected)
+            {
+                con = datasource.CreateConnection();
+                con.Open();
+
+            }
+            else if (datasource.ConnectionLevel == ConnectionLevel.AllInOne)
+            {
+                con = datasource.Connection;
+            }
+
+            // return if is not connected
+            if (con == null || con.State != ConnectionState.Open)
+            {
+                retval.SetCode(-2, "Not connected ! ");
+                retval.StopMeashure();
+                return retval;
+            }
+
+            // return if is not connected
+            //if (datasource.AgentState != AgentState.Connected)
+            //{
+            //    retval.SetCode(-2, "Not connected ! ");
+            //    retval.StopMeashure();
+            //    return retval;
+            //}
+
+
+            using (SqlCommand cmd = new SqlCommand(itm.Value, con))
             {
 
+                SqlParameter param;
 
-
-                retval.StartMeasure();
-                if (_conn.State == ConnectionState.Closed)
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = datasource.RunTimeout;
+                //set transaction
+                if (datasource.TransactionState == TransactionState.ActiveTransaction)
                 {
-                    _conn.Open();
+                    cmd.Transaction = datasource.Transaction;
                 }
-                using (SqlCommand cmd = new SqlCommand(itm.Value, _conn))
+
+                foreach (var item in itm.Params.Values)
                 {
+                    param = new SqlParameter();
+                    param.ParameterName = item.Name;
+                    param.Value = item.Value;
+                    param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(item.Type);
+                    param.Direction = SettingsHelperManager.GetParametrDirection(item.Direction);
+                    cmd.Parameters.Add(param);
+                }
 
-                    SqlParameter param;
 
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    foreach (var item in itm.Params.Values)
+                retval.AffectedRows = cmd.ExecuteNonQuery();
+                //set outputparams values 
+                if (itm.HasOutputParam)
+                {
+                    foreach (DataParam value in itm.OutputParams.Values)
                     {
-                        param = new SqlParameter();
-                        param.ParameterName = item.Name;
-                        param.Value = item.Value;
-                        param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(item.Type);
-                        param.Direction = SettingsHelperManager.GetParametrDirection(item.Direction);
-                        cmd.Parameters.Add(param);
+                        value.Value = cmd.Parameters[value.Name].Value.ToString();
                     }
+                }
 
+                if (cmd.Parameters.Count > 0)
+                {
+                    List<DataParam> returnparam = itm.GetparamsByDirection(ParamDirection.Return);
 
-                    cmd.ExecuteNonQuery();
-                    //set outputparams values 
-                    if (itm.HasOutputParam)
+                    if (returnparam.Count > 0)
                     {
-                        foreach (DataParam value in itm.OutputParams.Values)
+
+
+                        string name = returnparam[0].Name;
+
+
+                        if (cmd.Parameters[name] != null)
                         {
-                            value.Value = cmd.Parameters[value.Name].Value.ToString();
+                            retval.SetCode(Convert.ToInt32(cmd.Parameters[name].Value));
                         }
                     }
-
-                    if (cmd.Parameters.Count > 0)
-                    {
-                        List<DataParam> returnparam = itm.GetparamsByDirection(ParamDirection.Return);
-
-                        if (returnparam.Count > 0)
-                        {
-
-
-                            string name = returnparam[0].Name;
-
-
-                            if (cmd.Parameters[name] != null)
-                            {
-                                retval.SetCode((int) cmd.Parameters[name].Value);
-                            }
-                        }
-                    }
-
-
-
                 }
+
+
+
             }
+            // } end of using 
+            if (datasource.ConnectionLevel == ConnectionLevel.Single && con != null)
+            {
+                con.Dispose();
+            }
+
             retval.StopMeashure();
+
             return retval;
         } // update ,delete //insert 
 
-        private static ExecResult ExecuteDS(DataSItem settingItem, out DataSet ds, string datasource = null)
+        private static ExecResult ExecuteDS(DataSItem settingItem, out DataSet ds, DbAgent datasource)
         {
 
             ExecResult retval = new ExecResult();
-            string cstr = datasource ?? settingItem.ConnectionString;
-            using (_conn = new SqlConnection(cstr))
+            // string cstr = datasource ?? settingItem.ConnectionString;
+            //using (_conn = new SqlConnection(cstr))
+            //{
+
+
+
+
+            retval.StartMeasure();
+
+            ds = new DataSet();
+
+            SqlConnection con = null;
+            if (datasource.ConnectionLevel == ConnectionLevel.Single)//&& datasource.AgentState != AgentState.Connected)
+            {
+                con = datasource.CreateConnection();
+                con.Open();
+
+            }
+            else if (datasource.ConnectionLevel == ConnectionLevel.AllInOne)
+            {
+                con = datasource.Connection;
+            }
+
+            // return if is not connected
+            if (con == null || con.State != ConnectionState.Open)
+            {
+                retval.SetCode(-2, "Not connected ! ");
+                retval.StopMeashure();
+                return retval;
+            }
+
+
+
+
+
+            using (SqlCommand cmd = new SqlCommand(settingItem.Value, con))
             {
 
+                SqlParameter param;
 
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = datasource.RunTimeout;
+                //set transaction
+                if (datasource.TransactionState == TransactionState.ActiveTransaction)
+                {
+                    cmd.Transaction = datasource.Transaction;
+                }
 
-
-                retval.StartMeasure();
-
-                _conn.Open();
-                ds = new DataSet();
-                using (SqlCommand cmd = new SqlCommand(settingItem.Value, _conn))
+                foreach (DataParam item in settingItem.Params.Values)
                 {
 
-                    SqlParameter param;
-
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    foreach (DataParam item in settingItem.Params.Values)
-                    {
-                        param = new SqlParameter();
-                        param.ParameterName = item.Name;
-                        param.Value = item.Value;
-                        param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(item.Type);
-                        param.Direction = SettingsHelperManager.GetParametrDirection(item.Direction);
-                        cmd.Parameters.Add(param);
-                    }
-
-                    using (SqlDataAdapter da = new SqlDataAdapter())
-                    {
-                        da.SelectCommand = cmd;
-                        da.SelectCommand.CommandType = CommandType.StoredProcedure;
-                        da.Fill(ds);
-                    }
-
-                    //set outputparams values 
-                    if (settingItem.HasOutputParam)
-                    {
-                        foreach (DataParam value in settingItem.OutputParams.Values)
-                        {
-                            value.Value = cmd.Parameters[value.Name].Value.ToString();
-                        }
-                    }
-
-                    if (cmd.Parameters.Count > 0)
-                    {
-                        List<DataParam> returnparam = settingItem.GetparamsByDirection(ParamDirection.Return);
-
-                        if (returnparam.Count > 0)
-                        {
-
-
-                            string name = returnparam[0].Name;
-
-
-                            if (cmd.Parameters[name] != null)
-                            {
-                                retval.SetCode((int) cmd.Parameters[name].Value);
-                            }
-                        }
-                    }
-
+                    param = new SqlParameter();
+                    param.ParameterName = item.Name;
+                    param.Value = item.Value;
+                    param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(item.Type);
+                    param.Direction = SettingsHelperManager.GetParametrDirection(item.Direction);
+                    cmd.Parameters.Add(param);
                 }
+
+                using (SqlDataAdapter da = new SqlDataAdapter())
+                {
+                    da.SelectCommand = cmd;
+                    da.SelectCommand.CommandType = CommandType.StoredProcedure;
+                    da.Fill(ds);
+                }
+
+                //set outputparams values 
+                if (settingItem.HasOutputParam)
+                {
+                    foreach (DataParam value in settingItem.OutputParams.Values)
+                    {
+                        value.Value = cmd.Parameters[value.Name].Value.ToString();
+                    }
+                }
+
+                if (cmd.Parameters.Count > 0)
+                {
+                    List<DataParam> returnparam = settingItem.GetparamsByDirection(ParamDirection.Return);
+
+                    if (returnparam.Count > 0)
+                    {
+
+
+                        string name = returnparam[0].Name;
+
+
+                        if (cmd.Parameters[name] != null)
+                        {
+                            retval.SetCode(Convert.ToInt32(cmd.Parameters[name].Value));
+                        }
+                    }
+                }
+
+            }
+            //end of using }
+            if (datasource.ConnectionLevel == ConnectionLevel.Single && con != null)
+            {
+                con.Dispose();
             }
 
             retval.StopMeashure();
@@ -525,7 +665,7 @@ namespace SPBP
             //  agent = new DbAgent();
             agent.Name = node.Attributes[XmlName].Value;
             agent.SetConnectionString(node.Attributes[XmlConStr].Value);
-            agent.GetState(Convert.ToBoolean(node.Attributes[XmlState].Value));
+            agent.SetState(Convert.ToBoolean(node.Attributes[XmlState].Value));
 
 
 
@@ -558,10 +698,10 @@ namespace SPBP
         #endregion
 
 
-        
+
         #region Async
 
-        public static async Task< ExecAsyncResult> ExecDataReadByInheritanceAsync<T>(this DataSItem item, DbAgent agent ) where T : DbObject
+        public static async Task<ExecAsyncResult> ExecDataReadByInheritanceAsync<T>(this DataSItem item, DbAgent agent) where T : DbObject
         {
             //return Task.Factory.StartNew(() =>
             //    {
@@ -590,70 +730,88 @@ namespace SPBP
 
                 SqlCommand cmd = null;
                 container = new Bag<T>();
-                string constr = agent.ConnectionString;
+
 
                 result.StartMeasure();
                 try
                 {
                     // create and open a connection object "Data Source=FARID-PC;Initial Catalog=InsuranceFactory;Integrated Security=True"
-                    using (_conn = new SqlConnection(constr))
+                    //using (_conn = new SqlConnection(constr))
+                    //{
+
+                    SqlConnection con = null;
+                    if (agent.ConnectionLevel == ConnectionLevel.Single)
                     {
+                        con = agent.CreateConnection();
+                        await con.OpenAsync();
+
+                    }
+                    else if (agent.ConnectionLevel == ConnectionLevel.AllInOne)
+                    {
+                        con = agent.Connection;
+                    }
+
+                    // check state of connection 
+
+                    cmd = new SqlCommand(item.Value, con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandTimeout = agent.RunTimeout;
+                    if (agent.TransactionState == TransactionState.ActiveTransaction)
+                    {
+                        cmd.Transaction = agent.Transaction;
+                    }
+                    SqlParameter param;
 
 
-
-                        await _conn.OpenAsync().ConfigureAwait(false);
-
-                        cmd = new SqlCommand(item.Value, _conn);
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        SqlParameter param;
-
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        foreach (var itm in item.Params.Values)
-                        {
-                            param = new SqlParameter();
-                            param.ParameterName = itm.Name;
-                            param.Value = itm.Value;
-                            param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(itm.Type);
-                            param.Direction = SettingsHelperManager.GetParametrDirection(itm.Direction);
-                            cmd.Parameters.Add(param);
-                        }
-                        _reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+                    foreach (var itm in item.Params.Values)
+                    {
+                        param = new SqlParameter();
+                        param.ParameterName = itm.Name;
+                        param.Value = itm.Value;
+                        param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(itm.Type);
+                        param.Direction = SettingsHelperManager.GetParametrDirection(itm.Direction);
+                        cmd.Parameters.Add(param);
+                    }
+                    using (_reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
 
                         while (await _reader.ReadAsync().ConfigureAwait(false))
                         {
                             container.SetFromReader(ref _reader);
                         }
-                        _reader.Close();
+                    }
 
-                        //set outputparams values 
+                    //set outputparams values 
 
-                        if (item.HasOutputParam)
+                    if (item.HasOutputParam)
+                    {
+                        foreach (DataParam value in item.OutputParams.Values)
                         {
-                            foreach (DataParam value in item.OutputParams.Values)
+                            value.Value = cmd.Parameters[value.Name].Value.ToString();
+                        }
+                    }
+
+                    if (cmd.Parameters.Count > 0)
+                    {
+                        List<DataParam> ret = item.GetparamsByDirection(ParamDirection.Return);
+                        if (ret.Count > 0)
+                        {
+                            if (cmd.Parameters[ret[0].Name] != null)
                             {
-                                value.Value = cmd.Parameters[value.Name].Value.ToString();
+                                result.Result.SetCode(
+                                    Convert.ToInt32(
+                                    cmd.Parameters[item.GetparamsByDirection(ParamDirection.Return)[0].Name].Value));
                             }
                         }
 
-                        if (cmd.Parameters.Count > 0)
-                        {
-                            List<DataParam> ret = item.GetparamsByDirection(ParamDirection.Return);
-                            if (ret.Count > 0)
-                            {
-                                if (cmd.Parameters[ret[0].Name] != null)
-                                {
-                                    result.Result.SetCode(
-                                        (int)
-                                        cmd.Parameters[item.GetparamsByDirection(ParamDirection.Return)[0].Name].Value);
-                                }
-
-                             }
-
-
-                        }
 
                     }
 
+                    // }end of using
+                    if (agent.ConnectionLevel == ConnectionLevel.Single && con != null) //&& agent.AgentState != AgentState.Disconnected)
+                    {
+                        con.Dispose();
+                    }
                     result.Object = container;
                 }
                 catch (Exception exc)
@@ -662,7 +820,7 @@ namespace SPBP
                 }
 
                 result.StopMeasure();
-                result.ExecutionType=AsyncExecutionType.ExecByINheritance;
+                result.ExecutionType = AsyncExecutionType.ExecByINheritance;
                 return result;
 
                 //----
@@ -671,88 +829,108 @@ namespace SPBP
             {
                 throw new Exception("Agent is  null  or the state  is false  ");
             }
-           
+
 
 
 
         }
-       
-        public static async  Task<ExecAsyncResult> ExecuteDataReaderByRefAsync<T>(this DataSItem item, DbAgent agent)
+
+        public static async Task<ExecAsyncResult> ExecuteDataReaderByRefAsync<T>(this DataSItem item, DbAgent agent)
         {
-            
+
             ExecAsyncResult result = new ExecAsyncResult();
             result.ExecutedProcedure = item;
             IBag<T> container;
 
             if (agent != null && agent.State)
             {
-             //   return ExecuteProcedureDRByReflection<T>(item, out container, agent.ConnectionString);
+                //   return ExecuteProcedureDRByReflection<T>(item, out container, agent.ConnectionString);
 
                 //---
 
                 SqlCommand cmd = null;
                 container = new RefBag<T>();
-                string constr = agent.ConnectionString;
+
 
                 result.StartMeasure();
                 try
                 {
-                    // create and open a connection object "Data Source=FARID-PC;Initial Catalog=InsuranceFactory;Integrated Security=True"
-                    using (_conn = new SqlConnection(constr))
+
+                    //using (_conn = new SqlConnection(constr))
+                    //{
+                    SqlConnection con = null;
+                    if (agent.ConnectionLevel == ConnectionLevel.Single)
                     {
+                        con = agent.CreateConnection();
+                        await con.OpenAsync();
+                        //   con = agent.CreateConnection();
+                        //_shouldBeSync use 
+                    }
 
 
 
-                        await  _conn.OpenAsync().ConfigureAwait(false);
 
-                        cmd = new SqlCommand(item.Value, _conn);
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        SqlParameter param;
+                    cmd = new SqlCommand(item.Value, con)
+                    {
+                        CommandType = CommandType.StoredProcedure,
+                        CommandTimeout = agent.RunTimeout
+                    };
 
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        foreach (var itm in item.Params.Values)
-                        {
-                            param = new SqlParameter();
-                            param.ParameterName = itm.Name;
-                            param.Value = itm.Value;
-                            param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(itm.Type);
-                            param.Direction = SettingsHelperManager.GetParametrDirection(itm.Direction);
-                            cmd.Parameters.Add(param);
-                        }
-                        _reader = await  cmd.ExecuteReaderAsync().ConfigureAwait(false);
+                    if (agent.TransactionState == TransactionState.ActiveTransaction)
+                    {
+                        cmd.Transaction = agent.Transaction;
+                    }
 
-                        while (  await _reader.ReadAsync().ConfigureAwait(false))
+                    SqlParameter param;
+
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    foreach (var itm in item.Params.Values)
+                    {
+                        param = new SqlParameter();
+                        param.ParameterName = itm.Name;
+                        param.Value = itm.Value;
+                        param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(itm.Type);
+                        param.Direction = SettingsHelperManager.GetParametrDirection(itm.Direction);
+                        cmd.Parameters.Add(param);
+                    }
+                    using (_reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        while (await _reader.ReadAsync().ConfigureAwait(false))
                         {
                             container.SetFromReader(ref _reader);
                         }
-                        _reader.Close();
+                    }
 
-                        //set outputparams values 
+                    //set outputparams values 
 
-                        if (item.HasOutputParam)
+                    if (item.HasOutputParam)
+                    {
+                        foreach (DataParam value in item.OutputParams.Values)
                         {
-                            foreach (DataParam value in item.OutputParams.Values)
+                            value.Value = cmd.Parameters[value.Name].Value.ToString();
+                        }
+                    }
+
+                    if (cmd.Parameters.Count > 0)
+                    {
+                        List<DataParam> ret = item.GetparamsByDirection(ParamDirection.Return);
+                        if (ret.Count > 0)
+                        {
+                            if (cmd.Parameters[ret[0].Name] != null)
                             {
-                                value.Value = cmd.Parameters[value.Name].Value.ToString();
+                                result.Result.SetCode(
+                                    Convert.ToInt32(
+                                    cmd.Parameters[item.GetparamsByDirection(ParamDirection.Return)[0].Name].Value));
                             }
                         }
 
-                        if (cmd.Parameters.Count > 0)
-                        {
-                            List<DataParam> ret = item.GetparamsByDirection(ParamDirection.Return);
-                            if (ret.Count > 0)
-                            {
-                                if (cmd.Parameters[ret[0].Name] != null)
-                                {
-                                    result.Result.SetCode(
-                                        (int)
-                                        cmd.Parameters[item.GetparamsByDirection(ParamDirection.Return)[0].Name].Value);
-                                }
-                            }
 
+                    }
 
-                        }
-
+                    //  } end of using 
+                    if (agent.ConnectionLevel == ConnectionLevel.Single && con != null)
+                    {
+                        con.Dispose();
                     }
 
                     result.Object = container;
@@ -763,7 +941,7 @@ namespace SPBP
                 }
 
                 result.StopMeasure();
-                result.ExecutionType=AsyncExecutionType.ExecByRef;
+                result.ExecutionType = AsyncExecutionType.ExecByRef;
                 return result;
 
                 //----
@@ -772,10 +950,16 @@ namespace SPBP
             {
                 throw new Exception("Agent is  null  or the state  is false  ");
             }
-           
+
 
         }
 
+        /// <summary>
+        /// Changed!
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="agent"></param>
+        /// <returns></returns>
         public static async Task<ExecAsyncResult> ExecuteNonQueryAsync(this DataSItem item, DbAgent agent)
         {
             //return Task.Factory.StartNew(() =>
@@ -795,70 +979,83 @@ namespace SPBP
 
             if (agent != null && agent.State)
             {
-                string cnt = agent.ConnectionString;
 
-                using (_conn = new SqlConnection(cnt))
+
+
+                ///Open Connection via  agent
+
+                SqlConnection con = null;
+                result.StartMeasure();
+                if (agent.ConnectionLevel == ConnectionLevel.Single)
                 {
-
-
-
-                    result.StartMeasure();
-                    if (_conn.State == ConnectionState.Closed)
-                    {
-                         await   _conn.OpenAsync().ConfigureAwait(false);
-                    }
-                    using (SqlCommand cmd = new SqlCommand(item.Value, _conn))
-                    {
-
-                        SqlParameter param;
-
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        foreach (var itm in item.Params.Values)
-                        {
-                            param = new SqlParameter();
-                            param.ParameterName = itm.Name;
-                            param.Value = itm.Value;
-                            param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(itm.Type);
-                            param.Direction = SettingsHelperManager.GetParametrDirection(itm.Direction);
-                            cmd.Parameters.Add(param);
-                        }
-
-
-                       await  cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
-                        //set outputparams values 
-                        if (item.HasOutputParam)
-                        {
-                            foreach (DataParam value in item.OutputParams.Values)
-                            {
-                                value.Value = cmd.Parameters[value.Name].Value.ToString();
-                            }
-                        }
-
-                        if (cmd.Parameters.Count > 0)
-                        {
-                            List<DataParam> returnparam = item.GetparamsByDirection(ParamDirection.Return);
-
-                            if (returnparam.Count > 0)
-                            {
-
-
-                                string name = returnparam[0].Name;
-
-
-                                if (cmd.Parameters[name] != null)
-                                {
-                                    result.Result.SetCode((int)cmd.Parameters[name].Value);
-                                }
-                            }
-                        }
-
-
-
-                    }
+                    con = agent.CreateConnection();
+                    await con.OpenAsync();
                 }
+
+
+
+                using (SqlCommand cmd = new SqlCommand(item.Value, agent.Connection))
+                {
+                    if (agent.TransactionState == TransactionState.ActiveTransaction)
+                    {
+                        cmd.Transaction = agent.Transaction;
+                    }
+
+
+                    SqlParameter param;
+
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandTimeout = agent.RunTimeout;
+                    foreach (var itm in item.Params.Values)
+                    {
+                        param = new SqlParameter();
+                        param.ParameterName = itm.Name;
+                        param.Value = itm.Value;
+                        param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(itm.Type);
+                        param.Direction = SettingsHelperManager.GetParametrDirection(itm.Direction);
+                        cmd.Parameters.Add(param);
+                    }
+
+
+                    result.Result.AffectedRows = await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+                    //set outputparams values 
+                    if (item.HasOutputParam)
+                    {
+                        foreach (DataParam value in item.OutputParams.Values)
+                        {
+                            value.Value = cmd.Parameters[value.Name].Value.ToString();
+                        }
+                    }
+
+                    if (cmd.Parameters.Count > 0)
+                    {
+                        List<DataParam> returnparam = item.GetparamsByDirection(ParamDirection.Return);
+
+                        if (returnparam.Count > 0)
+                        {
+
+
+                            string name = returnparam[0].Name;
+
+
+                            if (cmd.Parameters[name] != null)
+                            {
+                                result.Result.SetCode(Convert.ToInt32(cmd.Parameters[name].Value));
+                            }
+                        }
+                    }
+
+
+
+                }
+                if (agent.ConnectionLevel == ConnectionLevel.Single && con != null)
+                {
+                    con.Dispose();
+                }
+
                 result.StopMeasure();
 
-               
+
             }
             else
             {
@@ -866,23 +1063,24 @@ namespace SPBP
             }
 
 
-            return result; 
+            return result;
         }
+
 
         public static async Task<ExecAsyncResult> ExecDataSetAsync(this DataSItem item, DbAgent agent)
         {
-            return await  Task.Factory.StartNew(() =>
+            return await Task.Factory.StartNew(() =>
             {
 
                 ExecAsyncResult result = new ExecAsyncResult();
 
                 DataSet rsSet;
                 ExecResult rs = ExecDataSet(item, agent, out rsSet);
-                
+
                 result.ExecutedProcedure = item;
                 result.Result = rs;
-                result.Object = rsSet; 
-                result.ExecutionType=AsyncExecutionType.ExecDataSet;
+                result.Object = rsSet;
+                result.ExecutionType = AsyncExecutionType.ExecDataSet;
                 return result;
             });
         }
@@ -890,18 +1088,350 @@ namespace SPBP
 
         #endregion
 
+        #region previousVersion 
+        /*
+          public static async Task< ExecAsyncResult> ExecDataReadByInheritanceAsync<T>(this DataSItem item, DbAgent agent ) where T : DbObject
+       {
+           //return Task.Factory.StartNew(() =>
+           //    {
+
+           //        ExecAsyncResult result = new ExecAsyncResult();
+           //        IBag<T> container;
+           //        ExecResult rs = ExecDataReadByInheritance<T>(item, agent, out container);
+
+           //        result.ExecutedProcedure = item;
+           //        result.Result = rs;
+           //        result.Object = container;
+           //        result.ExecutionType=AsyncExecutionType.ExecByINheritance;
+           //        return result;
+           //    });
+
+
+           ExecAsyncResult result = new ExecAsyncResult();
+           result.ExecutedProcedure = item;
+           IBag<T> container;
+
+           if (agent != null && agent.State)
+           {
+               //   return ExecuteProcedureDRByReflection<T>(item, out container, agent.ConnectionString);
+
+               //---
+
+               SqlCommand cmd = null;
+               container = new Bag<T>();
+               string constr = agent.ConnectionString;
+
+               result.StartMeasure();
+               try
+               {
+                   // create and open a connection object "Data Source=FARID-PC;Initial Catalog=InsuranceFactory;Integrated Security=True"
+                   using (_conn = new SqlConnection(constr))
+                   {
+
+
+
+                       await _conn.OpenAsync().ConfigureAwait(false);
+
+                       cmd = new SqlCommand(item.Value, _conn);
+                       cmd.CommandType = CommandType.StoredProcedure;
+                       SqlParameter param;
+
+                       cmd.CommandType = CommandType.StoredProcedure;
+                       foreach (var itm in item.Params.Values)
+                       {
+                           param = new SqlParameter();
+                           param.ParameterName = itm.Name;
+                           param.Value = itm.Value;
+                           param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(itm.Type);
+                           param.Direction = SettingsHelperManager.GetParametrDirection(itm.Direction);
+                           cmd.Parameters.Add(param);
+                       }
+                       _reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+
+                       while (await _reader.ReadAsync().ConfigureAwait(false))
+                       {
+                           container.SetFromReader(ref _reader);
+                       }
+                       _reader.Close();
+
+                       //set outputparams values 
+
+                       if (item.HasOutputParam)
+                       {
+                           foreach (DataParam value in item.OutputParams.Values)
+                           {
+                               value.Value = cmd.Parameters[value.Name].Value.ToString();
+                           }
+                       }
+
+                       if (cmd.Parameters.Count > 0)
+                       {
+                           List<DataParam> ret = item.GetparamsByDirection(ParamDirection.Return);
+                           if (ret.Count > 0)
+                           {
+                               if (cmd.Parameters[ret[0].Name] != null)
+                               {
+                                   result.Result.SetCode(
+                                       (int)
+                                       cmd.Parameters[item.GetparamsByDirection(ParamDirection.Return)[0].Name].Value);
+                               }
+                           }
+
+
+                       }
+
+                   }
+
+                   result.Object = container;
+               }
+               catch (Exception exc)
+               {
+                   throw exc;
+               }
+
+               result.StopMeasure();
+               result.ExecutionType=AsyncExecutionType.ExecByINheritance;
+               return result;
+
+               //----
+           }
+           else
+           {
+               throw new Exception("Agent is  null  or the state  is false  ");
+           }
+
+
+
+
+       }
+
+       public static async  Task<ExecAsyncResult> ExecuteDataReaderByRefAsync<T>(this DataSItem item, DbAgent agent)
+       {
+
+           ExecAsyncResult result = new ExecAsyncResult();
+           result.ExecutedProcedure = item;
+           IBag<T> container;
+
+           if (agent != null && agent.State)
+           {
+            //   return ExecuteProcedureDRByReflection<T>(item, out container, agent.ConnectionString);
+
+               //---
+
+               SqlCommand cmd = null;
+               container = new RefBag<T>();
+               string constr = agent.ConnectionString;
+
+               result.StartMeasure();
+               try
+               {
+                   // create and open a connection object "Data Source=FARID-PC;Initial Catalog=InsuranceFactory;Integrated Security=True"
+                   using (_conn = new SqlConnection(constr))
+                   {
+
+
+
+                       await  _conn.OpenAsync().ConfigureAwait(false);
+
+                       cmd = new SqlCommand(item.Value, _conn);
+                       cmd.CommandType = CommandType.StoredProcedure;
+                       SqlParameter param;
+
+                       cmd.CommandType = CommandType.StoredProcedure;
+                       foreach (var itm in item.Params.Values)
+                       {
+                           param = new SqlParameter();
+                           param.ParameterName = itm.Name;
+                           param.Value = itm.Value;
+                           param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(itm.Type);
+                           param.Direction = SettingsHelperManager.GetParametrDirection(itm.Direction);
+                           cmd.Parameters.Add(param);
+                       }
+                       _reader = await  cmd.ExecuteReaderAsync().ConfigureAwait(false);
+
+                       while (  await _reader.ReadAsync().ConfigureAwait(false))
+                       {
+                           container.SetFromReader(ref _reader);
+                       }
+                       _reader.Close();
+
+                       //set outputparams values 
+
+                       if (item.HasOutputParam)
+                       {
+                           foreach (DataParam value in item.OutputParams.Values)
+                           {
+                               value.Value = cmd.Parameters[value.Name].Value.ToString();
+                           }
+                       }
+
+                       if (cmd.Parameters.Count > 0)
+                       {
+                           List<DataParam> ret = item.GetparamsByDirection(ParamDirection.Return);
+                           if (ret.Count > 0)
+                           {
+                               if (cmd.Parameters[ret[0].Name] != null)
+                               {
+                                   result.Result.SetCode(
+                                       (int)
+                                       cmd.Parameters[item.GetparamsByDirection(ParamDirection.Return)[0].Name].Value);
+                               }
+                           }
+
+
+                       }
+
+                   }
+
+                   result.Object = container;
+               }
+               catch (Exception exc)
+               {
+                   throw exc;
+               }
+
+               result.StopMeasure();
+               result.ExecutionType=AsyncExecutionType.ExecByRef;
+               return result;
+
+               //----
+           }
+           else
+           {
+               throw new Exception("Agent is  null  or the state  is false  ");
+           }
+
+
+       }
+
+       public static async Task<ExecAsyncResult> ExecuteNonQueryAsync(this DataSItem item, DbAgent agent)
+       {
+           //return Task.Factory.StartNew(() =>
+           //{
+
+           //    ExecAsyncResult result = new ExecAsyncResult();
+
+           //    ExecResult rs = ExecuteNonQuery(item, agent);
+
+           //    result.ExecutedProcedure = item;
+           //    result.Result = rs;
+           //    return result;
+           //});
+
+           ExecAsyncResult result = new ExecAsyncResult();
+           result.ExecutedProcedure = item;
+
+           if (agent != null && agent.State)
+           {
+               string cnt = agent.ConnectionString;
+
+               using (_conn = new SqlConnection(cnt))
+               {
+
+
+
+                   result.StartMeasure();
+                   if (_conn.State == ConnectionState.Closed)
+                   {
+                        await   _conn.OpenAsync().ConfigureAwait(false);
+                   }
+                   using (SqlCommand cmd = new SqlCommand(item.Value, _conn))
+                   {
+
+                       SqlParameter param;
+
+                       cmd.CommandType = CommandType.StoredProcedure;
+                       foreach (var itm in item.Params.Values)
+                       {
+                           param = new SqlParameter();
+                           param.ParameterName = itm.Name;
+                           param.Value = itm.Value;
+                           param.SqlDbType = SettingsHelperManager.DetermineSqlDbTYpe(itm.Type);
+                           param.Direction = SettingsHelperManager.GetParametrDirection(itm.Direction);
+                           cmd.Parameters.Add(param);
+                       }
+
+
+                      await  cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+                       //set outputparams values 
+                       if (item.HasOutputParam)
+                       {
+                           foreach (DataParam value in item.OutputParams.Values)
+                           {
+                               value.Value = cmd.Parameters[value.Name].Value.ToString();
+                           }
+                       }
+
+                       if (cmd.Parameters.Count > 0)
+                       {
+                           List<DataParam> returnparam = item.GetparamsByDirection(ParamDirection.Return);
+
+                           if (returnparam.Count > 0)
+                           {
+
+
+                               string name = returnparam[0].Name;
+
+
+                               if (cmd.Parameters[name] != null)
+                               {
+                                   result.Result.SetCode((int)cmd.Parameters[name].Value);
+                               }
+                           }
+                       }
+
+
+
+                   }
+               }
+               result.StopMeasure();
+
+
+           }
+           else
+           {
+               throw new Exception("Agent is  null  or state  is false  ");
+           }
+
+
+           return result; 
+       }
+
+       public static async Task<ExecAsyncResult> ExecDataSetAsync(this DataSItem item, DbAgent agent)
+       {
+           return await  Task.Factory.StartNew(() =>
+           {
+
+               ExecAsyncResult result = new ExecAsyncResult();
+
+               DataSet rsSet;
+               ExecResult rs = ExecDataSet(item, agent, out rsSet);
+
+               result.ExecutedProcedure = item;
+               result.Result = rs;
+               result.Object = rsSet; 
+               result.ExecutionType=AsyncExecutionType.ExecDataSet;
+               return result;
+           });
+       }
+
+            */
+
+        #endregion
+
+
 
         #region  SettingMethods
         public static DataSet RunDsViaCommand(string command, string datasource)
         {
-            string cstr = datasource;
-            _conn = new SqlConnection(cstr);
+
+            _conn = new SqlConnection(datasource);
             _conn.Open();
             DataSet ds = new DataSet();
             using (SqlCommand cmd = new SqlCommand(command, _conn))
             {
 
-                SqlParameter param;
+                // SqlParameter param;
 
                 cmd.CommandType = CommandType.Text;
 

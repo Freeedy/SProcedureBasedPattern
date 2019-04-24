@@ -10,6 +10,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SpbpCoreTest
@@ -176,23 +177,31 @@ namespace SpbpCoreTest
                 Schema = "general",
                 Name = "Images_NewINstance"
             };
-            itm.AddParam(new DataParam("@path", CustomSqlTypes.String));
+            itm.AddParam(new DataParam("@path", CustomSqlTypes.String ,ParamDirection.Input, Guid.NewGuid().ToString()));
             itm.AddReturnParam(CustomSqlTypes.Int);
 
-            itm.Params["@path"].Value = Guid.NewGuid().ToString();
+           // itm.Params["@path"].Value = Guid.NewGuid().ToString();
 
             await agent.OpenConnectionAsync();
 
             ExecAsyncResult res = await itm.ExecuteNonQueryAsync(agent);
             Console.WriteLine(res.ToString());
 
+            itm.Params["@path"].Value = Guid.NewGuid().ToString();
              res = await itm.ExecuteNonQueryAsync(agent);
             Console.WriteLine(res.ToString());
             agent.Dispose(); 
             
 
         }
-
+        /*
+         Start !
+First Path  : 558278df-28d0-4bb5-82a1-87d2397569fb
+Code : 1 - Execution Time :  224.06 ms
+Compleated : 1256
+Second Path  : 67e1ed21-3570-4a64-8647-5b030ea03c40
+Code : 1 - Execution Time :  8.617 ms
+             */
         static void NewImagesViaAgentSync(DbAgent agent )
         {
             DataSItem itm = new DataSItem
@@ -203,17 +212,83 @@ namespace SpbpCoreTest
             };
             itm.AddParam(new DataParam("@path", CustomSqlTypes.String));
             itm.AddReturnParam(CustomSqlTypes.Int);
+            string first = Guid.NewGuid().ToString();
+            itm.Params["@path"].Value =first ;
+            Console.WriteLine("First Path  : " + first);
+            //  agent.OpenConnection();
+            //using (agent)
+            //{
+            // agent.OpenConnection();
 
-            itm.Params["@path"].Value = Guid.NewGuid().ToString();
+          agent.OpenConnection();
 
-             agent.OpenConnection();
+            ExecResult res = itm.ExecuteNonQuery(agent);
 
-            ExecResult res =  itm.ExecuteNonQuery(agent);
+                Console.WriteLine(res.ToString());
+                first = Guid.NewGuid().ToString();
+                
+               
+                    for (int i = 0; i < 25000; i++)
+                    {
+                        first = Guid.NewGuid().ToString();
+                        itm.Params["@path"].Value = first;
+                        Console.WriteLine($"ThreadId : {Thread.CurrentThread.ManagedThreadId.ToString()} Path i : {i.ToString()}  : " + first);
+                        res = itm.ExecuteNonQuery(agent);
+                        Console.WriteLine(res.ToString());
+                    }
 
-            Console.WriteLine(res.ToString());
-            res = itm.ExecuteNonQuery(agent);
-            Console.WriteLine(res.ToString());
-            agent.Dispose();
+            bool firstfin = false;
+            Thread t = new Thread(new ThreadStart(delegate
+           {
+               for (int i = 0; i < 25000; i++)
+               {
+                   first = Guid.NewGuid().ToString();
+                   itm.Params["@path"].Value = first;
+                   Console.WriteLine($"ThreadId : {Thread.CurrentThread.ManagedThreadId.ToString()} Path i : {i.ToString()}  : " + first);
+                   res = itm.ExecuteNonQuery(agent);
+                   Console.WriteLine(res.ToString());
+               }
+
+               firstfin = true;
+           }));
+
+            bool sec = false; 
+            Thread t2 = new Thread(new ThreadStart(delegate
+            {
+                for (int i = 0; i < 25000; i++)
+                {
+                    first = Guid.NewGuid().ToString();
+                    itm.Params["@path"].Value = first;
+                    Console.WriteLine($"ThreadId : {Thread.CurrentThread.ManagedThreadId.ToString()} Path i : {i.ToString()}  : " + first);
+                    res = itm.ExecuteNonQuery(agent);
+                    Console.WriteLine(res.ToString());
+                }
+                sec = true; 
+            }));
+
+            t.Start();
+            t2.Start();
+
+            while(!(firstfin && sec))
+            {
+
+                if(firstfin && sec)
+                {
+                    agent.Dispose();
+                    break;
+                }
+
+            }
+
+
+            //  agent.CloseConnection();
+
+            //itm.Params["@path"].Value = first;
+            //Console.WriteLine("Second Path  : " + first);
+            //res = itm.ExecuteNonQuery(agent);
+            //Console.WriteLine(res.ToString());
+            //}
+            //  agent.Dispose();
         }
 
         static async void NewImages(int count, DbAgent agent)
@@ -341,6 +416,16 @@ namespace SpbpCoreTest
 
 
 
+        static void TestAgentTisposing(DbAgent agent )
+        {
+            using (agent)
+            {
+
+            }
+            GC.Collect();
+            SqlConnection con = agent.CreateConnection(); 
+
+        }
 
 
 
@@ -349,7 +434,7 @@ namespace SpbpCoreTest
          
             DbAgent agent = new DbAgent("marsDb", "Data Source=FREEDY;Initial Catalog=Mars_db;Integrated Security=True",
                                        true ,ConnectionLevel.AllInOne);
-
+           // TestAgentTisposing(agent);
             //  DbAgent mrAgent = new DbAgent("Mircelal",
             //                            @"Data Source=MIRJALAL\SQLEXPRESS;Initial Catalog=payment;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False", true);
 
@@ -371,11 +456,12 @@ namespace SpbpCoreTest
 
             // ImagesGigImagesGET(2, agent).Wait();
 
-                      NewImagesViaAgent(agent).Wait(); 
-          //  NewImagesViaAgentSync(agent);
+                     NewImagesViaAgent(agent).Wait(); 
+
+           // NewImagesViaAgentSync(agent);
             sw.Stop();
 
-            Console.WriteLine("Compleated : " + sw.ElapsedMilliseconds.ToString());
+            Console.WriteLine("Compleated : " + sw.Elapsed.TotalSeconds.ToString());
             Console.ReadKey();
 
         }

@@ -5,7 +5,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml;
 
-namespace SPBP.Handling
+namespace SPBP
 {
     public enum CustomSqlTypes : int
     {
@@ -94,19 +94,19 @@ namespace SPBP.Handling
             {
                 case ParamDirection.Input:
                     return ParameterDirection.Input;
-                    break;
+                   
                 case ParamDirection.Output:
                     return ParameterDirection.Output;
-                    break;
+                   
                 case ParamDirection.Return:
                     return ParameterDirection.ReturnValue;
-                    break;
+                   
                 case ParamDirection.InOut:
                     return ParameterDirection.InputOutput;
-                    break;
+                  
                 default:
                     return ParameterDirection.Input;
-                    break;
+                   
 
             }
         }
@@ -116,34 +116,34 @@ namespace SPBP.Handling
             {
                 case CustomSqlTypes.Int:
                     return SqlDbType.Int;
-                    break;
+                   
                 case CustomSqlTypes.Long:
                     return SqlDbType.BigInt;
-                    break;
+                   
                 case CustomSqlTypes.String:
                     return SqlDbType.NVarChar;
-                    break;
+                   
                 case CustomSqlTypes.Datetime:
                     return SqlDbType.DateTime;
-                    break;
+                  
                 case CustomSqlTypes.Double:
                     return SqlDbType.Decimal;
-                    break;
+                   
                 case CustomSqlTypes.Money:
                     return SqlDbType.Money;
-                    break;
+                   
                 case CustomSqlTypes.SmallInt:
                     return SqlDbType.SmallInt;
-                    break;
+                   
                 case CustomSqlTypes.Char:
                     return SqlDbType.NChar;
-                    break;
+                    
                 case CustomSqlTypes.Real:
                     return SqlDbType.Real;
-                    break;
+                   
                 default:
                     return SqlDbType.NVarChar;
-                    break;
+                   
 
             }
         }

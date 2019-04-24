@@ -1,7 +1,8 @@
-﻿using System;
+﻿using SPBP.Handling;
+using System;
 using System.Xml;
 
-namespace SPBP.Handling
+namespace SPBP
 {
     public class DataParam
     {

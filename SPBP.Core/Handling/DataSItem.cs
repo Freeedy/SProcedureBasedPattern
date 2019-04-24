@@ -1,8 +1,9 @@
-﻿using System;
+﻿using SPBP.Handling;
+using System;
 using System.Collections.Generic;
 using System.Xml;
 
-namespace SPBP.Handling
+namespace SPBP
 {
     public class DataSItem
     {

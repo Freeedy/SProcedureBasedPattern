@@ -26,6 +26,8 @@ namespace SPBP
 
 
         #region Fields
+
+        static object _lockObj = new object();
         private static SqlDataReader _reader;
         private static SqlDataAdapter _adapter;
         private static XmlDocument _manDoc = new XmlDocument();
@@ -235,13 +237,21 @@ namespace SPBP
             try
             {
                 // create and open a connection object "Data Source=FARID-PC;Initial Catalog=InsuranceFactory;Integrated Security=True"
-                if (datasource.ConnectionLevel == ConnectionLevel.Single && datasource.AgentState != AgentState.Connected)
+
+                SqlConnection con = null; 
+                if (datasource.ConnectionLevel == ConnectionLevel.Single )//&& datasource.AgentState != AgentState.Connected)
                 {
-                    datasource.OpenConnection();
+                    con = datasource.CreateConnection();
+                    con.Open();
+                    
+                }
+                else if (datasource.ConnectionLevel == ConnectionLevel.AllInOne  )
+                {
+                    con = datasource.Connection; 
                 }
 
                 // return if is not connected
-                if (datasource.AgentState != AgentState.Connected)
+                if (con == null || con.State != ConnectionState.Open)
                 {
                     result.SetCode(-2, "Not connected ! ");
                     result.StopMeashure();
@@ -249,9 +259,9 @@ namespace SPBP
                 }
 
 
-                using (cmd = new SqlCommand(proc.Value, datasource.Connection))
+                using (cmd = new SqlCommand(proc.Value, con))
                 {
-
+                    cmd.CommandTimeout = datasource.RunTimeout;
                     //set transaction
                     if (datasource.TransactionState == TransactionState.ActiveTransaction)
                     {
@@ -293,16 +303,18 @@ namespace SPBP
                     {
                         if (cmd.Parameters[proc.GetparamsByDirection(ParamDirection.Return)[0].Name] != null)
                         {
-                            result.SetCode((int)cmd.Parameters[proc.GetparamsByDirection(ParamDirection.Return)[0].Name].Value);
+                            result.SetCode(Convert.ToInt32( cmd.Parameters[proc.GetparamsByDirection(ParamDirection.Return)[0].Name].Value));
                         }
 
                     }
                     //_conn.Close();
                     // } end of using 
-                    if (datasource.ConnectionLevel == ConnectionLevel.Single && datasource.AgentState != AgentState.Disconnected)
+                    //&& datasource.AgentState != AgentState.Disconnected)
+                    if (datasource.ConnectionLevel == ConnectionLevel.Single && con != null )//&& con.State != ConnectionState.Closed)
                     {
-                        datasource.Dispose();
+                        con.Dispose();
                     }
+
 
                 }
             }
@@ -328,22 +340,31 @@ namespace SPBP
                 // create and open a connection object "Data Source=FARID-PC;Initial Catalog=InsuranceFactory;Integrated Security=True"
                 //using (_conn = new SqlConnection(constr))
                 //{
-                if (datasource.ConnectionLevel == ConnectionLevel.Single && datasource.AgentState != AgentState.Connected)
+
+                SqlConnection con = null;
+                if (datasource.ConnectionLevel == ConnectionLevel.Single)//&& datasource.AgentState != AgentState.Connected)
                 {
-                    datasource.OpenConnection();
+                    con = datasource.CreateConnection();
+                    con.Open();
+
+                }
+                else if (datasource.ConnectionLevel == ConnectionLevel.AllInOne)
+                {
+                    con = datasource.Connection;
                 }
 
                 // return if is not connected
-                if (datasource.AgentState != AgentState.Connected)
+                if (con == null || con.State != ConnectionState.Open)
                 {
                     result.SetCode(-2, "Not connected ! ");
                     result.StopMeashure();
                     return result;
                 }
 
-                cmd = new SqlCommand(proc.Value, datasource.Connection)
+                cmd = new SqlCommand(proc.Value,con)
                 {
-                    CommandType = CommandType.StoredProcedure
+                    CommandType = CommandType.StoredProcedure , 
+                    CommandTimeout=datasource.RunTimeout
                 };
                 SqlParameter param;
 
@@ -371,9 +392,9 @@ namespace SPBP
                         container.SetFromReader(ref _reader);
                     }
                 // } end of using 
-                if (datasource.ConnectionLevel == ConnectionLevel.Single && datasource.AgentState != AgentState.Disconnected)
+                if (datasource.ConnectionLevel == ConnectionLevel.Single && con!=null )//&& con.State!=ConnectionState.Closed)
                 {
-                    datasource.Dispose();
+                    con.Dispose(); 
                 }
 
                 //set outputparams values 
@@ -392,7 +413,7 @@ namespace SPBP
                     {
                         if (cmd.Parameters[ret[0].Name] != null)
                         {
-                            result.SetCode((int)cmd.Parameters[proc.GetparamsByDirection(ParamDirection.Return)[0].Name].Value);
+                            result.SetCode( Convert.ToInt32( cmd.Parameters[proc.GetparamsByDirection(ParamDirection.Return)[0].Name].Value));
                         }
                     }
                 }
@@ -409,41 +430,56 @@ namespace SPBP
         private static ExecResult ExecuteProcedureNonQuery(DataSItem itm, DbAgent datasource)
         {
             ExecResult retval = new ExecResult();
-           
+
             //using (_conn = new SqlConnection(constr))
             //{
 
-
-
+           
                 retval.StartMeasure();
 
-            if (datasource.ConnectionLevel == ConnectionLevel.Single && datasource.AgentState != AgentState.Connected)
+            SqlConnection con = null;
+            if (datasource.ConnectionLevel == ConnectionLevel.Single)//&& datasource.AgentState != AgentState.Connected)
             {
-                datasource.OpenConnection();
+                con = datasource.CreateConnection();
+                con.Open();
+
+            }
+            else if (datasource.ConnectionLevel == ConnectionLevel.AllInOne)
+            {
+                con = datasource.Connection;
             }
 
             // return if is not connected
-            if (datasource.AgentState != AgentState.Connected)
+            if (con == null || con.State != ConnectionState.Open)
             {
                 retval.SetCode(-2, "Not connected ! ");
                 retval.StopMeashure();
                 return retval;
             }
 
+            // return if is not connected
+            //if (datasource.AgentState != AgentState.Connected)
+            //{
+            //    retval.SetCode(-2, "Not connected ! ");
+            //    retval.StopMeashure();
+            //    return retval;
+            //}
 
-            using (SqlCommand cmd = new SqlCommand(itm.Value, datasource.Connection))
+
+            using (SqlCommand cmd = new SqlCommand(itm.Value, con))
                 {
 
                     SqlParameter param;
 
                     cmd.CommandType = CommandType.StoredProcedure;
-                //set transaction
-                if (datasource.TransactionState == TransactionState.ActiveTransaction)
-                {
-                    cmd.Transaction = datasource.Transaction;
-                }
+                    cmd.CommandTimeout = datasource.RunTimeout;
+                    //set transaction
+                    if (datasource.TransactionState == TransactionState.ActiveTransaction)
+                    {
+                        cmd.Transaction = datasource.Transaction;
+                    }
 
-                foreach (var item in itm.Params.Values)
+                    foreach (var item in itm.Params.Values)
                     {
                         param = new SqlParameter();
                         param.ParameterName = item.Name;
@@ -454,7 +490,7 @@ namespace SPBP
                     }
 
 
-                    cmd.ExecuteNonQuery();
+                    retval.AffectedRows = cmd.ExecuteNonQuery();
                     //set outputparams values 
                     if (itm.HasOutputParam)
                     {
@@ -477,7 +513,7 @@ namespace SPBP
 
                             if (cmd.Parameters[name] != null)
                             {
-                                retval.SetCode((int) cmd.Parameters[name].Value);
+                                retval.SetCode(Convert.ToInt32(cmd.Parameters[name].Value));
                             }
                         }
                     }
@@ -485,13 +521,14 @@ namespace SPBP
 
 
                 }
-            // } end of using 
-            if (datasource.ConnectionLevel == ConnectionLevel.Single && datasource.AgentState != AgentState.Disconnected)
-            {
-                datasource.Dispose();
-            }
+                // } end of using 
+                if (datasource.ConnectionLevel == ConnectionLevel.Single && con!=null )
+                {
+                    con.Dispose();
+                }
 
-            retval.StopMeashure();
+                retval.StopMeashure();
+            
             return retval;
         } // update ,delete //insert 
 
@@ -508,27 +545,39 @@ namespace SPBP
           
             retval.StartMeasure();
 
-            if(datasource.ConnectionLevel == ConnectionLevel.Single && datasource.AgentState != AgentState.Connected)
-            {
-                datasource.OpenConnection();
-            }
-            
-           
+            ds = new DataSet();
 
-             ds = new DataSet();
+            SqlConnection con = null;
+            if (datasource.ConnectionLevel == ConnectionLevel.Single)//&& datasource.AgentState != AgentState.Connected)
+            {
+                con = datasource.CreateConnection();
+                con.Open();
+
+            }
+            else if (datasource.ConnectionLevel == ConnectionLevel.AllInOne)
+            {
+                con = datasource.Connection;
+            }
+
             // return if is not connected
-            if (datasource.AgentState != AgentState.Connected)
+            if (con == null || con.State != ConnectionState.Open)
             {
                 retval.SetCode(-2, "Not connected ! ");
                 retval.StopMeashure();
                 return retval;
             }
-            using (SqlCommand cmd = new SqlCommand(settingItem.Value, datasource.Connection))
+
+
+
+           
+           
+            using (SqlCommand cmd = new SqlCommand(settingItem.Value, con))
                 {
 
                     SqlParameter param;
-
+                
                     cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = datasource.RunTimeout;
                 //set transaction
                 if (datasource.TransactionState == TransactionState.ActiveTransaction)
                 {
@@ -575,16 +624,16 @@ namespace SPBP
 
                             if (cmd.Parameters[name] != null)
                             {
-                                retval.SetCode((int) cmd.Parameters[name].Value);
+                            retval.SetCode(Convert.ToInt32(cmd.Parameters[name].Value));
                             }
                         }
                     }
 
                 }
             //end of using }
-            if (datasource.ConnectionLevel == ConnectionLevel.Single && datasource.AgentState != AgentState.Disconnected)
+            if (datasource.ConnectionLevel == ConnectionLevel.Single && con!=null)
             {
-                datasource.Dispose();
+                con.Dispose(); 
             }
 
             retval.StopMeashure();
@@ -690,16 +739,24 @@ namespace SPBP
                     //using (_conn = new SqlConnection(constr))
                     //{
 
-                    if (agent.ConnectionLevel == ConnectionLevel.Single && agent.AgentState != AgentState.Connected)
+                    SqlConnection con= null; 
+                    if (agent.ConnectionLevel == ConnectionLevel.Single )
                     {
-                        await agent.OpenConnectionAsync();
+                        con = agent.CreateConnection();
+                        await con.OpenAsync();
+
+                    }
+                    else if ( agent.ConnectionLevel==ConnectionLevel.AllInOne)
+                    {
+                        con = agent.Connection; 
                     }
 
                    // check state of connection 
 
-                        cmd = new SqlCommand(item.Value, agent.Connection);
+                        cmd = new SqlCommand(item.Value, con);
                         cmd.CommandType = CommandType.StoredProcedure;
-                        if (agent.TransactionState == TransactionState.ActiveTransaction)
+                        cmd.CommandTimeout = agent.RunTimeout;
+                    if (agent.TransactionState == TransactionState.ActiveTransaction)
                          {
                             cmd.Transaction = agent.Transaction;
                          }
@@ -742,8 +799,8 @@ namespace SPBP
                                 if (cmd.Parameters[ret[0].Name] != null)
                                 {
                                     result.Result.SetCode(
-                                        (int)
-                                        cmd.Parameters[item.GetparamsByDirection(ParamDirection.Return)[0].Name].Value);
+                                        Convert.ToInt32(
+                                        cmd.Parameters[item.GetparamsByDirection(ParamDirection.Return)[0].Name].Value));
                                 }
                             }
 
@@ -751,9 +808,9 @@ namespace SPBP
                         }
 
                     // }end of using
-                    if (agent.ConnectionLevel == ConnectionLevel.Single && agent.AgentState != AgentState.Disconnected)
+                    if (agent.ConnectionLevel == ConnectionLevel.Single && con !=null  ) //&& agent.AgentState != AgentState.Disconnected)
                     {
-                        agent.Dispose();
+                        con.Dispose();
                     }
                     result.Object = container;
                 }
@@ -798,22 +855,27 @@ namespace SPBP
                 result.StartMeasure();
                 try
                 {
-                    
+
                     //using (_conn = new SqlConnection(constr))
                     //{
-                    if (agent.ConnectionLevel == ConnectionLevel.Single && agent.AgentState != AgentState.Connected)
+                    SqlConnection con = null;
+                    if (agent.ConnectionLevel == ConnectionLevel.Single ) 
                     {
-                        await agent.OpenConnectionAsync();
+                        con = agent.CreateConnection();
+                        await con.OpenAsync();
+                     //   con = agent.CreateConnection();
+                      //_shouldBeSync use 
                     }
 
 
 
 
-                    cmd = new SqlCommand(item.Value, agent.Connection)
+                    cmd = new SqlCommand(item.Value,con)
                     {
-                        CommandType = CommandType.StoredProcedure
+                        CommandType = CommandType.StoredProcedure , 
+                        CommandTimeout = agent.RunTimeout
                     };
-
+                  
                     if (agent.TransactionState == TransactionState.ActiveTransaction)
                     {
                         cmd.Transaction = agent.Transaction;
@@ -857,8 +919,8 @@ namespace SPBP
                                 if (cmd.Parameters[ret[0].Name] != null)
                                 {
                                     result.Result.SetCode(
-                                        (int)
-                                        cmd.Parameters[item.GetparamsByDirection(ParamDirection.Return)[0].Name].Value);
+                                        Convert.ToInt32(
+                                        cmd.Parameters[item.GetparamsByDirection(ParamDirection.Return)[0].Name].Value));
                                 }
                             }
 
@@ -866,9 +928,9 @@ namespace SPBP
                         }
 
                     //  } end of using 
-                    if (agent.ConnectionLevel == ConnectionLevel.Single && agent.AgentState != AgentState.Disconnected)
+                    if (agent.ConnectionLevel == ConnectionLevel.Single  && con!=null) 
                     {
-                        agent.Dispose();
+                        con.Dispose(); 
                     }
 
                     result.Object = container;
@@ -917,16 +979,20 @@ namespace SPBP
 
             if (agent != null && agent.State)
             {
-               
+
 
 
                 ///Open Connection via  agent
-                if (agent.ConnectionLevel == ConnectionLevel.Single && agent.AgentState!=AgentState.Connected)
+
+                SqlConnection con = null;
+                result.StartMeasure();
+                if (agent.ConnectionLevel == ConnectionLevel.Single )
                 {
-                    await agent.OpenConnectionAsync();
+                    con = agent.CreateConnection();
+                    await con.OpenAsync();
                 }
 
-                    result.StartMeasure();
+                    
                    
                     using (SqlCommand cmd = new SqlCommand(item.Value, agent.Connection))
                     {
@@ -939,6 +1005,7 @@ namespace SPBP
                         SqlParameter param;
 
                         cmd.CommandType = CommandType.StoredProcedure;
+                         cmd.CommandTimeout = agent.RunTimeout;
                         foreach (var itm in item.Params.Values)
                         {
                             param = new SqlParameter();
@@ -950,7 +1017,7 @@ namespace SPBP
                         }
 
 
-                       await  cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+                    result.Result.AffectedRows=  await  cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
                         //set outputparams values 
                         if (item.HasOutputParam)
                         {
@@ -973,7 +1040,7 @@ namespace SPBP
 
                                 if (cmd.Parameters[name] != null)
                                 {
-                                    result.Result.SetCode((int)cmd.Parameters[name].Value);
+                                    result.Result.SetCode( Convert.ToInt32( cmd.Parameters[name].Value));
                                 }
                             }
                         }
@@ -981,10 +1048,11 @@ namespace SPBP
 
 
                     }
-                if (agent.ConnectionLevel == ConnectionLevel.Single && agent.AgentState!=AgentState.Disconnected)
+                if (agent.ConnectionLevel == ConnectionLevel.Single && con!=null)
                 {
-                    agent.Dispose(); 
+                    con.Dispose(); 
                 }
+
               result.StopMeasure();
 
                
@@ -997,6 +1065,7 @@ namespace SPBP
 
             return result; 
         }
+
 
         public static async Task<ExecAsyncResult> ExecDataSetAsync(this DataSItem item, DbAgent agent)
         {
@@ -1362,7 +1431,7 @@ namespace SPBP
             using (SqlCommand cmd = new SqlCommand(command, _conn))
             {
 
-                SqlParameter param;
+               // SqlParameter param;
 
                 cmd.CommandType = CommandType.Text;
 

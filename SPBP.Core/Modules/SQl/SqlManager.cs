@@ -244,7 +244,7 @@ namespace SPBP.Modules.SQl
             {
                 case "INOUT":
                     return ParamDirection.Output;
-                    break;
+                  
                 default:
                     return ParamDirection.Input;
             }
@@ -257,31 +257,31 @@ namespace SPBP.Modules.SQl
             {
                 case "nvarchar":
                     return CustomSqlTypes.String;
-                    break;
+                  
                 case "int":
                     return CustomSqlTypes.Int;
-                    break;
+                   
                 case "datetime":
                     return CustomSqlTypes.Datetime;
-                    break;
+                   
                 case "money":
                     return CustomSqlTypes.Money;
-                    break;
+                   
                 case "real":
                     return CustomSqlTypes.Double;
-                    break;
+                    
                 case "nchar":
                     return CustomSqlTypes.Char;
-                    break;
+                  
                 case "ntext":
                     return CustomSqlTypes.String;
-                    break;
+                  
                 case "smallint":
                     return CustomSqlTypes.SmallInt;
-                    break;
+                   
                 default:
                     return CustomSqlTypes.String;
-                    break;
+                   
             }
         }
 

@@ -3,7 +3,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace SPBP.Connector
+namespace SPBP
 {
     public enum AgentState
     {
@@ -47,19 +47,22 @@ namespace SPBP.Connector
 
         public AgentState AgentState { get; private set; } = AgentState.Disconnected;
         public ConnectionLevel ConnectionLevel { get; private set; } = ConnectionLevel.Single;
-        public TransactionState TransactionState { get; private set; } = TransactionState.Ignore; 
+        public TransactionState TransactionState { get; private set; } = TransactionState.Ignore;
+        public int RunTimeout { get;  set; } = 30; 
 
         public DbAgent()
         {
 
         }
-        public DbAgent(string name, string constr, bool state, ConnectionLevel level = ConnectionLevel.Single )
+        public DbAgent(string name, string constr, bool state, ConnectionLevel level = ConnectionLevel.Single ,int timeout = 30)
         {
             Name = name;
             SetConnectionString(constr );
             SetState(state);
+            ConnectionLevel = level;
+            RunTimeout = timeout; 
         }
-        public DbAgent(string constr):this (string .Empty ,constr ,false )
+        public DbAgent(string constr):this (string .Empty ,constr ,true )
         {
             
         }
@@ -85,6 +88,10 @@ namespace SPBP.Connector
             _state = state;
         }
       
+        public SqlConnection CreateConnection()
+        {
+            return new SqlConnection(_connectionString);
+        }
 
         public void OpenConnection()
         {

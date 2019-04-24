@@ -9,7 +9,7 @@ namespace SPBP.Handling
 {
     public class ExecAsyncResult
     {
-        private Stopwatch _sw = new Stopwatch();
+        //private readonly Stopwatch _sw = new Stopwatch();
         public ExecResult Result { get; set; }
         public DataSItem ExecutedProcedure { get; set; }
        // public Stopwatch SW { get { return _sw;  } }
