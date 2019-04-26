@@ -866,6 +866,10 @@ namespace SPBP
                      //   con = agent.CreateConnection();
                       //_shouldBeSync use 
                     }
+                    else if (agent.ConnectionLevel==ConnectionLevel.AllInOne)
+                    {
+                        con = agent.Connection; 
+                    }
 
 
 
@@ -991,10 +995,14 @@ namespace SPBP
                     con = agent.CreateConnection();
                     await con.OpenAsync();
                 }
+                else if (agent.ConnectionLevel == ConnectionLevel.AllInOne)
+                {
+                    con = agent.Connection;
+                }
 
-                    
-                   
-                    using (SqlCommand cmd = new SqlCommand(item.Value, agent.Connection))
+
+
+                using (SqlCommand cmd = new SqlCommand(item.Value, agent.Connection))
                     {
                     if(agent.TransactionState==TransactionState.ActiveTransaction)
                     {

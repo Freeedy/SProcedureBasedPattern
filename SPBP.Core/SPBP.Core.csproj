@@ -5,10 +5,11 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Freeedy/SProcedureBasedPattern</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/Freeedy/SProcedureBasedPattern#license</PackageLicenseUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
     <RepositoryUrl>https://github.com/Freeedy/SProcedureBasedPattern</RepositoryUrl>
     <PackageTags>C#</PackageTags>
     <Authors>@Freeedy</Authors>
+    <Version>1.0.0.7</Version>
   </PropertyGroup>
 
   <ItemGroup>

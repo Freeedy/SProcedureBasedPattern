@@ -360,7 +360,7 @@
           }
         }
       },
-      "SPBP.Core/1.0.0": {
+      "SPBP.Core/1.0.0.7": {
         "type": "project",
         "framework": ".NETStandard,Version=v2.0",
         "dependencies": {
@@ -1178,7 +1178,7 @@
         "version.txt"
       ]
     },
-    "SPBP.Core/1.0.0": {
+    "SPBP.Core/1.0.0.7": {
       "type": "project",
       "path": "../SPBP.Core/SPBP.Core.csproj",
       "msbuildProject": "../SPBP.Core/SPBP.Core.csproj"
@@ -1187,7 +1187,7 @@
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v2.1": [
       "Microsoft.NETCore.App >= 2.1.0",
-      "SPBP.Core >= 1.0.0"
+      "SPBP.Core >= 1.0.0.7"
     ]
   },
   "packageFolders": {

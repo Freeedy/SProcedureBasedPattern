@@ -386,6 +386,95 @@ Code : 1 - Execution Time :  8.617 ms
         }
 
 
+        static async void ImagesGetAsyncNewTest(DbAgent agent )
+        {
+            if (agent.ConnectionLevel ==ConnectionLevel.AllInOne)
+            {
+                await agent.OpenConnectionAsync();
+            }
+
+            DataSItem itm = new DataSItem();
+            itm.Schema = "general";
+
+            itm.Name = "Images_Get";
+            // itm.AddParam(new DataParam("@path", CustomSqlTypes.String));
+            itm.AddReturnParam(CustomSqlTypes.Int);
+            //  itm.FillPRocedureParamsFromSQLAgent(agent);
+            // itm.Params.Add("@path",new DataParam());
+
+
+            List<Task<ExecAsyncResult>> _alltaskst = new List<Task<ExecAsyncResult>>();
+
+            for (int i = 0; i < 2; i++)
+            {
+                Task<ExecAsyncResult> t = itm.ExecuteDataReaderByRefAsync<Img>(agent);
+                _alltaskst.Add(t); 
+            }
+
+
+
+            while(_alltaskst.Count>0)
+            {
+                Task<ExecAsyncResult> fintask = await Task.WhenAny(_alltaskst);
+                _alltaskst.Remove(fintask);
+
+                ExecAsyncResult result =  await fintask;
+                IBag<Img> images = result.Object as IBag<Img>;
+                Console.WriteLine("Item Count : " + images.Objects.Count.ToString() + "  " + result.ToString());
+
+            }
+           
+                    // itm.Params["@path"].Value = Guid.NewGuid().ToString();
+                   
+                    //  Console.WriteLine(string.Format("Starting task {0}", x));
+                    // await Task.Delay(1000);
+                    //Thread.Sleep(methodWait);
+                    //  Console.WriteLine(string.Format("Finishing task {0}", x));
+              
+            if (agent.ConnectionLevel==ConnectionLevel.AllInOne)
+            {
+                agent.Dispose();
+            }
+            
+        }
+
+        static async Task ImagesGetAsyncMUltiple(DbAgent agent )
+        {
+            if (agent.ConnectionLevel == ConnectionLevel.AllInOne)
+            {
+                await agent.OpenConnectionAsync();
+            }
+
+            DataSItem itm = new DataSItem();
+            itm.Schema = "general";
+
+            itm.Name = "Images_Get";
+            // itm.AddParam(new DataParam("@path", CustomSqlTypes.String));
+            itm.AddReturnParam(CustomSqlTypes.Int);
+            //  itm.FillPRocedureParamsFromSQLAgent(agent);
+            // itm.Params.Add("@path",new DataParam());
+
+
+            
+
+            for (int i = 0; i < 1000; i++)
+            {
+                ExecAsyncResult res1 = await itm.ExecuteDataReaderByRefAsync<Img>(agent);
+                IBag<Img> images = res1.Object as IBag<Img>;
+                Console.WriteLine("Item Count : " + images.Objects.Count.ToString() + "  " + res1.ToString());
+
+
+            }
+
+
+
+
+            if (agent.ConnectionLevel == ConnectionLevel.AllInOne)
+            {
+                agent.Dispose();
+            }
+        }
+
         static void ModelsGET(DbAgent agent)
         {
             DataSItem _selectedProcedure = new DataSItem();
@@ -432,7 +521,7 @@ Code : 1 - Execution Time :  8.617 ms
         static void Main(string[] args)
         {
          
-            DbAgent agent = new DbAgent("marsDb", "Data Source=FREEDY;Initial Catalog=Mars_db;Integrated Security=True",
+            DbAgent agent = new DbAgent("marsDb", "Data Source=FREEDY;Initial Catalog=Mars_db;Integrated Security=True;MultipleActiveResultSets=True",
                                        true ,ConnectionLevel.AllInOne);
            // TestAgentTisposing(agent);
             //  DbAgent mrAgent = new DbAgent("Mircelal",
@@ -454,11 +543,15 @@ Code : 1 - Execution Time :  8.617 ms
             //  ReflectionGetAsync(agent).Wait();
             // InheritanceGEtAsync(agent).Wait();
 
-            // ImagesGigImagesGET(2, agent).Wait();
+            //ImagesGigImagesGET(2, agent).Wait();
 
-                     NewImagesViaAgent(agent).Wait(); 
+            // NewImagesViaAgent(agent).Wait(); 
 
-           // NewImagesViaAgentSync(agent);
+            // NewImagesViaAgentSync(agent);
+           // ImagesGetAsyncNewTest(agent); 
+
+            ImagesGetAsyncMUltiple(agent).Wait();
+
             sw.Stop();
 
             Console.WriteLine("Compleated : " + sw.Elapsed.TotalSeconds.ToString());

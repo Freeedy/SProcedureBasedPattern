@@ -113,7 +113,10 @@ namespace SPBP
         {
             if (AgentState != AgentState.Connected)
             {
-                _con = new SqlConnection(_connectionString);
+                SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(_connectionString);
+                builder.MultipleActiveResultSets = true;
+                
+                _con = new SqlConnection(builder.ToString() );
                  await _con.OpenAsync().ConfigureAwait(false);
 
                 if (_con.State == System.Data.ConnectionState.Open)
