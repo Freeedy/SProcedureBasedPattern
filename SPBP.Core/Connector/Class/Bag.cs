@@ -8,7 +8,7 @@ using SPBP.Connector.Abstract;
 using SPBP.Connector.Attributes;
 using SPBP.Connector.Exceptions;
 
-namespace SPBP.Connector.Class
+namespace SPBP
 {
     public class Bag<T> : IBag<T> where T : DbObject
     {

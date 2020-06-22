@@ -2,7 +2,7 @@
 using SPBP.Connector;
 using SPBP.Connector.Abstract;
 using SPBP.Connector.Attributes;
-using SPBP.Connector.Class;
+
 using SPBP.Handling;
 using System;
 using System.Collections.Generic;
@@ -138,6 +138,8 @@ namespace SpbpCoreTest
             itm.Name = "Images_Get";
             // itm.AddParam(new DataParam("@path", CustomSqlTypes.String));
             itm.AddReturnParam(CustomSqlTypes.Int);
+
+         
 
             ExecAsyncResult res = await itm.ExecuteDataReaderByRefAsync<Img>(agent);
             IBag<Img> images = res.Object as IBag<Img>;
@@ -295,10 +297,12 @@ Code : 1 - Execution Time :  8.617 ms
         {
             //Images_NewINstance
 
-            DataSItem itm = new DataSItem();
-            //  itm.Schema = "general";
-            itm.Schema = "dbo";
-            itm.Name = "Images_NewINstance";
+            DataSItem itm = new DataSItem
+            {
+                //  itm.Schema = "general";
+                Schema = "dbo",
+                Name = "Images_NewINstance"
+            };
             itm.AddParam(new DataParam("@path", CustomSqlTypes.String));
             itm.AddReturnParam(CustomSqlTypes.Int);
             //  itm.FillPRocedureParamsFromSQLAgent(agent);
@@ -484,8 +488,9 @@ Code : 1 - Execution Time :  8.617 ms
             DataSet ds = new DataSet();
 
             //  _selectedProcedure.FillPRocedureParamsFromSQLAgent(agent); 
-            _selectedProcedure.ExecDataSet(agent, out ds);
+           ExecResult res =  _selectedProcedure.ExecDataSet(agent, out ds);
 
+           
             DataTable dt = ds.Tables[0];
 
 
@@ -523,6 +528,10 @@ Code : 1 - Execution Time :  8.617 ms
          
             DbAgent agent = new DbAgent("marsDb", "Data Source=FREEDY;Initial Catalog=Mars_db;Integrated Security=True;MultipleActiveResultSets=True",
                                        true ,ConnectionLevel.AllInOne);
+
+
+            DbAgent ag = new DbAgent();
+            
            // TestAgentTisposing(agent);
             //  DbAgent mrAgent = new DbAgent("Mircelal",
             //                            @"Data Source=MIRJALAL\SQLEXPRESS;Initial Catalog=payment;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False", true);

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SPBP.Connector.Attributes
+namespace SPBP
 {
     public class DbObjectAttribute:Attribute
     {

@@ -28,7 +28,7 @@ namespace SPBP
     }
 
 
-    public class DbAgent:IDisposable
+    public class DbAgent:IDisposable,ICloneable
     {
 
         private string _connectionString=string .Empty ;
@@ -167,7 +167,10 @@ namespace SPBP
             }
         }
 
-
+        public DbAgent CreateInstance()
+        {
+            return (DbAgent)Clone();
+        }
 
 
 
@@ -201,6 +204,11 @@ namespace SPBP
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        public object Clone()
+        {
+            return this.MemberwiseClone(); 
         }
     }
 }

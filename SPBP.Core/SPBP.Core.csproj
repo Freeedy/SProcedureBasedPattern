@@ -3,13 +3,17 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Freeedy/SProcedureBasedPattern</PackageProjectUrl>
     <PackageLicenseUrl></PackageLicenseUrl>
     <RepositoryUrl>https://github.com/Freeedy/SProcedureBasedPattern</RepositoryUrl>
-    <PackageTags>C#</PackageTags>
+    <PackageTags>C#,SQL Stored Procedure</PackageTags>
     <Authors>@Freeedy</Authors>
     <Version>1.0.0.7</Version>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>D:\Dev\Github\SProcedureBasedPattern\SPBP.Core\SPBP.Core.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

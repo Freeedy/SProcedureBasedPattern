@@ -12,7 +12,7 @@ namespace SPBP.Connector.Attributes
 
        public static bool IsDbObjectAttributed<T>()
        {
-           Attribute member = typeof(T).GetCustomAttribute<SPBP.Connector.Attributes.DbObjectAttribute>();
+           Attribute member = typeof(T).GetCustomAttribute<DbObjectAttribute>();
 
            if (member != null)
            {

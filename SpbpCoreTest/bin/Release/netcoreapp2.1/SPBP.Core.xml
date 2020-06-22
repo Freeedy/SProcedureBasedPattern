@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SPBP.Core</name>
+    </assembly>
+    <members>
+        <member name="M:SPBP.DBCommander.ExecuteProcedureDR``1(SPBP.DataSItem,SPBP.Connector.Class.IBag{``0}@,SPBP.DbAgent)">
+            <summary>
+            </summary>
+            <typeparam name="T"> Class type  </typeparam>
+            <param name="proc"> DataSettingItem </param>
+            <param name="container">Bag container </param>
+            <param name="datasource"></param>
+            <returns>return value of  procedure </returns>
+        </member>
+        <member name="M:SPBP.DBCommander.ExecuteNonQueryAsync(SPBP.DataSItem,SPBP.DbAgent)">
+            <summary>
+            Changed!
+            </summary>
+            <param name="item"></param>
+            <param name="agent"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

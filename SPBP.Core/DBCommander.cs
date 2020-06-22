@@ -7,7 +7,7 @@ using System.IO;
 using System.Xml;
 using SPBP.Connector;
 using SPBP.Connector.Abstract;
-using SPBP.Connector.Class;
+
 using SPBP.Handling;
 using System.Threading.Tasks;
 
@@ -999,10 +999,10 @@ namespace SPBP
                 {
                     con = agent.Connection;
                 }
+                
 
 
-
-                using (SqlCommand cmd = new SqlCommand(item.Value, agent.Connection))
+                using (SqlCommand cmd = new SqlCommand(item.Value, con))
                     {
                     if(agent.TransactionState==TransactionState.ActiveTransaction)
                     {

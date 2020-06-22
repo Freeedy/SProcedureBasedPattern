@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>SPBP.Core</id>
+    <version>1.0.0.7</version>
+    <authors>@Freeedy</authors>
+    <owners>@Freeedy</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectUrl>https://github.com/Freeedy/SProcedureBasedPattern</projectUrl>
+    <description>Package Description</description>
+    <tags>C#,SQL Stored Procedure</tags>
+    <repository url="https://github.com/Freeedy/SProcedureBasedPattern" />
+    <dependencies>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="System.Data.SqlClient" version="4.6.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="D:\Dev\Github\SProcedureBasedPattern\SPBP.Core\bin\Release\netstandard2.0\SPBP.Core.dll" target="lib\netstandard2.0\SPBP.Core.dll" />
+    <file src="D:\Dev\Github\SProcedureBasedPattern\SPBP.Core\bin\Release\netstandard2.0\SPBP.Core.xml" target="lib\netstandard2.0\SPBP.Core.xml" />
+  </files>
+</package>

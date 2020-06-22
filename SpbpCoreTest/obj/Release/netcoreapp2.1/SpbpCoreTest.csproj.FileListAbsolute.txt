@@ -1,0 +1,15 @@
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\bin\Release\netcoreapp2.1\SpbpCoreTest.deps.json
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\bin\Release\netcoreapp2.1\SpbpCoreTest.runtimeconfig.json
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\bin\Release\netcoreapp2.1\SpbpCoreTest.runtimeconfig.dev.json
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\bin\Release\netcoreapp2.1\SpbpCoreTest.dll
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\bin\Release\netcoreapp2.1\SpbpCoreTest.pdb
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\bin\Release\netcoreapp2.1\SPBP.Core.dll
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\bin\Release\netcoreapp2.1\SPBP.Core.pdb
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\bin\Release\netcoreapp2.1\SPBP.Core.xml
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\obj\Release\netcoreapp2.1\SpbpCoreTest.csprojAssemblyReference.cache
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\obj\Release\netcoreapp2.1\SpbpCoreTest.csproj.CoreCompileInputs.cache
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\obj\Release\netcoreapp2.1\SpbpCoreTest.AssemblyInfoInputs.cache
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\obj\Release\netcoreapp2.1\SpbpCoreTest.AssemblyInfo.cs
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\obj\Release\netcoreapp2.1\SpbpCoreTest.csproj.CopyComplete
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\obj\Release\netcoreapp2.1\SpbpCoreTest.dll
+D:\Dev\Github\SProcedureBasedPattern\SpbpCoreTest\obj\Release\netcoreapp2.1\SpbpCoreTest.pdb
